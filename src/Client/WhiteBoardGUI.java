@@ -23,7 +23,7 @@ public class WhiteBoardGUI extends JFrame {
     private final Logger logger = Logger.getLogger(WhiteBoardGUI.class.getName());
     private final ClientSideHandler clientSideHandler;
 
-    private JPanel subToolBarShape, subToolBarEraser;
+    private JPanel subToolBarShape, subToolBarText;
     public WhiteBoardGUI(ClientSideHandler clientSideHandler) {
         this.clientSideHandler = clientSideHandler;
         initUI();
@@ -39,6 +39,7 @@ public class WhiteBoardGUI extends JFrame {
         // Tool buttons
         setupToolBar();
         setupsubToolBarShape();
+//        setupSubToolBarText();
 
         JPanel drawingPanel = new JPanel() {
             @Override
@@ -60,8 +61,10 @@ public class WhiteBoardGUI extends JFrame {
                 if (g2d != null) {
                     switch (currentTool) {
                         case "Eraser" -> {
+                            Color currentColor = g2d.getColor(); Stroke currentStroke = g2d.getStroke();
                             Eraser eraser = new Eraser(oldX, oldY, currentX, currentY, Color.WHITE, 10);
                             eraser.execute(g2d);
+                            g2d.setColor(currentColor); g2d.setStroke(currentStroke);
                             clientSideHandler.sendUpdateToServer(eraser);
                             oldX = currentX;
                             oldY = currentY;
@@ -204,18 +207,72 @@ public class WhiteBoardGUI extends JFrame {
         });
     }
 
-    private void updatesubToolBarShapeVisibility() {
-        // Update visibility based on the selected tool
-        boolean isShape = Arrays.asList("FreeLine", "Line", "Circle", "Rectangle", "Oval").contains(currentTool);
-        subToolBarShape.setVisible(isShape);
+//    private void setupSubToolBarText() {
+//        subToolBarText = new JPanel();
+//        subToolBarText.setLayout(new FlowLayout(FlowLayout.CENTER));
+//
+//        // Font size selection
+//        JLabel fontSizeLabel = new JLabel(new ImageIcon("src/icons/fontSize.png"));  // Adjust icon path as needed
+//        SpinnerModel fontSizeModel = new SpinnerNumberModel(12, 8, 48, 1);  // Default 12, min 8, max 48, step 1
+//        JSpinner fontSizeSpinner = new JSpinner(fontSizeModel);
+//        fontSizeSpinner.setPreferredSize(new Dimension(50, 20));
+//
+//        // Font family selection
+//        JLabel fontLabel = new JLabel(new ImageIcon("src/icons/font.png"));  // Adjust icon path as needed
+//        String[] availableFonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+//        JComboBox<String> fontComboBox = new JComboBox<>(availableFonts);
+//        fontComboBox.setSelectedItem("Arial");
+//
+//        fontSizeSpinner.addChangeListener(e -> {
+//            int newSize = (int) ((JSpinner) e.getSource()).getValue();
+//            Font currentFont = g2d.getFont();
+//            g2d.setFont(new Font(currentFont.getFontName(), currentFont.getStyle(), newSize));
+//        });
+//
+//        fontComboBox.addActionListener(e -> {
+//            String fontName = (String) ((JComboBox) e.getSource()).getSelectedItem();
+//            Font currentFont = g2d.getFont();
+//            g2d.setFont(new Font(fontName, currentFont.getStyle(), currentFont.getSize()));
+//        });
+//
+//        // Font color chooser
+//        JLabel fontColorLabel = new JLabel(new ImageIcon("src/icons/color.png"));  // Adjust icon path as needed
+//        JButton fontColorButton = new JButton("Choose Color");
+//        fontColorButton.addActionListener(e -> {
+//            Color newFontColor = JColorChooser.showDialog(null, "Choose Font Color", g2d.getColor());
+//            if (newFontColor != null) {
+//                g2d.setColor(newFontColor);  // Update the current drawing color to the chosen color
+//            }
+//        });
+//
+//        subToolBarText.add(fontSizeLabel);
+//        subToolBarText.add(fontSizeSpinner);
+//        subToolBarText.add(fontLabel);
+//        subToolBarText.add(fontComboBox);
+//        subToolBarText.add(Box.createHorizontalStrut(20));  // Adds spacing
+//        subToolBarText.add(fontColorLabel);
+//        subToolBarText.add(fontColorButton);
+//
+//        subToolBarText.setVisible(false);  // Initially hidden until the Text tool is selected
+//        getContentPane().add(subToolBarText, BorderLayout.NORTH);
+//    }
 
+    private void updatesubToolBarShapeVisibility() {
+        // Determine which toolbar to show based on the selected tool
+        boolean isShape = Arrays.asList("FreeLine", "Line", "Circle", "Rectangle", "Oval").contains(currentTool);
+//        boolean isText = "Text".equals(currentTool);
+
+        subToolBarShape.setVisible(isShape);
+//        subToolBarText.setVisible(isText);  // Show text toolbar when the Text tool is selected
     }
 
     public void updateShape(DrawingShape shape, int x1, int y1, int x2, int y2) {
         if (shape instanceof Circle) {
             Circle circle = (Circle) shape;
             int radius = (int) Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-            circle.update(x1,y1, radius, radius);
+            int centerX = x1 - radius;
+            int centerY = y1 - radius;
+            circle.update(centerX, centerY, 2 * radius, 2 * radius);
         } else if (shape instanceof Rectangle) {
             Rectangle rectangle = (Rectangle) shape;
             int width = Math.abs(x2 - x1);
@@ -223,14 +280,27 @@ public class WhiteBoardGUI extends JFrame {
             int minX = Math.min(x1, x2);
             int minY = Math.min(y1, y2);
             rectangle.update(minX, minY, width, height);
+        } else if (shape instanceof Line) {
+            Line line = (Line) shape;
+            line.update(x1, y1, x2, y2);
+        } else if (shape instanceof Oval) {
+            Oval oval = (Oval) shape;
+            int ovalWidth = Math.abs(x2 - x1);
+            int ovalHeight = Math.abs(y2 - y1);
+            int minX = Math.min(x1, x2);
+            int minY = Math.min(y1, y2);
+            oval.update(minX, minY, ovalWidth, ovalHeight);
         }
     }
+
 
 
     private DrawingShape createShape(int x1, int y1, int x2, int y2, Color color) {
         switch (currentTool) {
             case "FreeLine":
                 return new FreeLine(x1, y1, x2, y2, color, ((BasicStroke)g2d.getStroke()).getLineWidth());
+            case "Line":
+                return new Line(x1, y1, x2, y2, color, ((BasicStroke)g2d.getStroke()).getLineWidth());
             case "Circle":
                 int radius = (int) Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
                 int topLeftX = x1 - radius;
@@ -243,7 +313,7 @@ public class WhiteBoardGUI extends JFrame {
             case "Oval":
                 int ovalWidth = Math.abs(x2 - x1);
                 int ovalHeight = Math.abs(y2 - y1);
-//                return new Oval(x1, y1, ovalWidth, ovalHeight, g2d.getColor());
+                return new Oval(x1, y1, ovalWidth, ovalHeight, color, ((BasicStroke)g2d.getStroke()).getLineWidth());
             default:
                 return null;
         }
