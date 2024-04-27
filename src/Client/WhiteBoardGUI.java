@@ -1,6 +1,7 @@
 package Client;
 
 import DrawingObject.*;
+import DrawingObject.Rectangle;
 
 import javax.swing.*;
 import javax.swing.text.DefaultFormatterFactory;
@@ -22,7 +23,7 @@ public class WhiteBoardGUI extends JFrame {
     private final Logger logger = Logger.getLogger(WhiteBoardGUI.class.getName());
     private final ClientSideHandler clientSideHandler;
 
-    private JPanel subToolBar;
+    private JPanel subToolBarShape, subToolBarEraser;
     public WhiteBoardGUI(ClientSideHandler clientSideHandler) {
         this.clientSideHandler = clientSideHandler;
         initUI();
@@ -37,7 +38,8 @@ public class WhiteBoardGUI extends JFrame {
 
         // Tool buttons
         setupToolBar();
-        setupSubToolBarShape();
+        setupsubToolBarShape();
+
         JPanel drawingPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -145,14 +147,14 @@ public class WhiteBoardGUI extends JFrame {
         JToggleButton button = new JToggleButton(icon);
         button.addActionListener(e -> {
             currentTool = actionCommand;
-            updateSubToolBarVisibility();
+            updatesubToolBarShapeVisibility();
         } );
         return button;
     }
 
-    private void setupSubToolBarShape() {
-        subToolBar = new JPanel();
-        subToolBar.setLayout(new FlowLayout(FlowLayout.CENTER));
+    private void setupsubToolBarShape() {
+        subToolBarShape = new JPanel();
+        subToolBarShape.setLayout(new FlowLayout(FlowLayout.CENTER));
 
         // Stroke size selection with icon
         Icon strokeIcon = new ImageIcon("src/icons/stroke.png");
@@ -186,14 +188,14 @@ public class WhiteBoardGUI extends JFrame {
             }
         });
 
-        subToolBar.add(strokeLabel);
-        subToolBar.add(strokeSizeSpinner);
-        subToolBar.add(Box.createHorizontalStrut(20)); // Adds spacing
-        subToolBar.add(colorLabel);
-        subToolBar.add(colorButton);
+        subToolBarShape.add(strokeLabel);
+        subToolBarShape.add(strokeSizeSpinner);
+        subToolBarShape.add(Box.createHorizontalStrut(20)); // Adds spacing
+        subToolBarShape.add(colorLabel);
+        subToolBarShape.add(colorButton);
 
-        subToolBar.setVisible(true);  // Initially visible
-        getContentPane().add(subToolBar, BorderLayout.NORTH);
+        subToolBarShape.setVisible(true);  // Initially visible
+        getContentPane().add(subToolBarShape, BorderLayout.NORTH);
 
         // Listener to update the stroke based on spinner value change
         strokeSizeSpinner.addChangeListener(e -> {
@@ -202,12 +204,11 @@ public class WhiteBoardGUI extends JFrame {
         });
     }
 
-
-
-    private void updateSubToolBarVisibility() {
+    private void updatesubToolBarShapeVisibility() {
         // Update visibility based on the selected tool
-        boolean isVisible = Arrays.asList("FreeLine", "Line", "Circle", "Rectangle", "Oval").contains(currentTool);
-        subToolBar.setVisible(isVisible);
+        boolean isShape = Arrays.asList("FreeLine", "Line", "Circle", "Rectangle", "Oval").contains(currentTool);
+        subToolBarShape.setVisible(isShape);
+
     }
 
     public void updateShape(DrawingShape shape, int x1, int y1, int x2, int y2) {
@@ -215,6 +216,13 @@ public class WhiteBoardGUI extends JFrame {
             Circle circle = (Circle) shape;
             int radius = (int) Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
             circle.update(x1,y1, radius, radius);
+        } else if (shape instanceof Rectangle) {
+            Rectangle rectangle = (Rectangle) shape;
+            int width = Math.abs(x2 - x1);
+            int height = Math.abs(y2 - y1);
+            int minX = Math.min(x1, x2);
+            int minY = Math.min(y1, y2);
+            rectangle.update(minX, minY, width, height);
         }
     }
 
@@ -227,11 +235,11 @@ public class WhiteBoardGUI extends JFrame {
                 int radius = (int) Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
                 int topLeftX = x1 - radius;
                 int topLeftY = y1 - radius;
-                return new Circle(topLeftX, topLeftY, 0, 0, color);
+                return new Circle(topLeftX, topLeftY, 0, 0, color, ((BasicStroke)g2d.getStroke()).getLineWidth());
             case "Rectangle":
                 int width = Math.abs(x2 - x1);
                 int height = Math.abs(y2 - y1);
-//                return new Rectangle(x1, y1, width, height, g2d.getColor());
+                return new Rectangle(x1, y1, width, height, color, ((BasicStroke)g2d.getStroke()).getLineWidth());
             case "Oval":
                 int ovalWidth = Math.abs(x2 - x1);
                 int ovalHeight = Math.abs(y2 - y1);
