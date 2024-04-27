@@ -1,5 +1,6 @@
 package Server;
 
+import DrawingObject.DeleteAll;
 import DrawingObject.DrawingShape;
 
 import java.io.IOException;
@@ -12,12 +13,12 @@ import java.util.logging.Logger;
 public class RequestHandler implements Runnable {
     private final Logger logger = Logger.getLogger(RequestHandler.class.getName());
     private final Socket clientSocket;
-    private WhiteBoardState sharedWhiteBoard;
+    private final WhiteBoardServer whiteBoardServer;
     private ObjectInputStream input;
     private ObjectOutputStream output;
-    public RequestHandler(Socket clientSocket, WhiteBoardState sharedWhiteBoard) {
+    public RequestHandler(Socket clientSocket, WhiteBoardServer whiteBoardServer) {
         this.clientSocket = clientSocket;
-        this.sharedWhiteBoard = sharedWhiteBoard;
+        this.whiteBoardServer = whiteBoardServer;
         try {
             this.output = new ObjectOutputStream(clientSocket.getOutputStream());
             this.input = new ObjectInputStream(clientSocket.getInputStream());
@@ -39,8 +40,10 @@ public class RequestHandler implements Runnable {
             while ((clientInput = input.readObject()) != null) {
                 logger.info("received Object From Client: "+ clientInput.getClass());
                 if (clientInput instanceof DrawingShape) {
-                    sharedWhiteBoard.updateState((DrawingShape) clientInput);
+                    whiteBoardServer.updateState((DrawingShape) clientInput);
                     broadcastUpdate((DrawingShape) clientInput);
+                } else if (clientInput instanceof DeleteAll) {
+                    broadcastDeleteAll((DeleteAll) clientInput);
                 }
             }
         } catch (Exception e) {
@@ -54,11 +57,18 @@ public class RequestHandler implements Runnable {
         }
     }
 
+    private void broadcastDeleteAll(DeleteAll deleteAll) {
+        for (RequestHandler requestHandler : whiteBoardServer.getRequestHandler()) {
+            whiteBoardServer.deleteAllOperations();
+            if (!requestHandler.equals(this)) { // Avoid sending the command back to the sender
+                logger.info("broadcast to all client: "+ requestHandler.clientSocket.getRemoteSocketAddress());
+                requestHandler.sendUpdate(deleteAll);
+            }
+        }
+    }
+
     private void broadcastUpdate(DrawingShape update) {
-        // Implement the broadcast logic to all clients
-
-        for (RequestHandler requestHandler : sharedWhiteBoard.getRequestHandler()) {
-
+        for (RequestHandler requestHandler : whiteBoardServer.getRequestHandler()) {
             if (!requestHandler.equals(this)) { // Avoid sending the command back to the sender
                 logger.info("broadcast to all client: "+ requestHandler.clientSocket.getRemoteSocketAddress());
                 requestHandler.sendUpdate(update);
@@ -66,9 +76,9 @@ public class RequestHandler implements Runnable {
         }
     }
 
-    public void sendUpdate(DrawingShape shape) {
+    public void sendUpdate(Object update) {
         try {
-            output.writeObject(shape);
+            output.writeObject(update);
             output.flush();
         } catch (IOException e) {
             logger.severe("Failed to send update to client: " + e.getMessage());

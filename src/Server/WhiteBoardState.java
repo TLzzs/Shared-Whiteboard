@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class WhiteBoardState {
-    private final List<Object> drawingOperations = new CopyOnWriteArrayList<>();
+    private List<Object> drawingOperations = new CopyOnWriteArrayList<>();
     private final List<RequestHandler> requestHandlers = new CopyOnWriteArrayList<>();
     public synchronized void updateState(DrawingShape operation) {
         drawingOperations.add(operation);
@@ -22,5 +22,8 @@ public class WhiteBoardState {
     }
     public boolean isFirstClient() {
         return requestHandlers.size() == 0;
+    }
+    public void deleteAllOperations (){
+        drawingOperations = new CopyOnWriteArrayList<>();
     }
 }

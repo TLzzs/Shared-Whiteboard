@@ -1,8 +1,10 @@
 package Client;
 
+import DrawingObject.DeleteAll;
 import DrawingObject.DrawingShape;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -53,6 +55,8 @@ public class ClientSideHandler {
             SwingUtilities.invokeLater(() -> {
                 wb.updateDrawing(shape);
             });
+        } else if (update instanceof DeleteAll) {
+            wb.initCanvas();
         }
     }
 

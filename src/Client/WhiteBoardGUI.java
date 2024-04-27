@@ -23,6 +23,7 @@ public class WhiteBoardGUI extends JFrame {
     private final Logger logger = Logger.getLogger(WhiteBoardGUI.class.getName());
     private final ClientSideHandler clientSideHandler;
 
+    private JPanel dynamicToolBar;
     private JPanel subToolBarShape, subToolBarText;
     public WhiteBoardGUI(ClientSideHandler clientSideHandler) {
         this.clientSideHandler = clientSideHandler;
@@ -36,10 +37,14 @@ public class WhiteBoardGUI extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // Tool buttons
         setupToolBar();
+
+        // Tool buttons
+        dynamicToolBar = new JPanel(new CardLayout()); // Use CardLayout to switch between panels
         setupsubToolBarShape();
-//        setupSubToolBarText();
+        setupSubToolBarText();
+        getContentPane().add(dynamicToolBar, BorderLayout.NORTH);
+
 
         JPanel drawingPanel = new JPanel() {
             @Override
@@ -97,7 +102,6 @@ public class WhiteBoardGUI extends JFrame {
             public void mousePressed(MouseEvent e) {
                 oldX = e.getX();
                 oldY = e.getY();
-
                 tempShape = createShape(oldX, oldY, oldX, oldY, g2d.getColor());
             }
 
@@ -120,17 +124,17 @@ public class WhiteBoardGUI extends JFrame {
 
     private void setupToolBar() {
         JPanel toolBar = new JPanel();
-        toolBar.setLayout(new GridLayout(7, 1));
+        toolBar.setLayout(new GridLayout(8, 1));
         toolBar.setBackground(Color.LIGHT_GRAY);
 
         // Define tool icons
         String[] iconPaths = {
                 "src/icons/freeLine.png", "src/icons/line.png", "src/icons/circle.png",
                 "src/icons/rectangle.png", "src/icons/oval.png", "src/icons/eraser.png",
-                "src/icons/text.png"
+                "src/icons/text.png", "src/icons/bin.png"
         };
         String[] toolNames = {
-                "FreeLine", "Line", "Circle", "Rectangle", "Oval", "Eraser", "Text"
+                "FreeLine", "Line", "Circle", "Rectangle", "Oval", "Eraser", "Text", "Bin"
         };
 
         ButtonGroup toolsGroup = new ButtonGroup();
@@ -150,7 +154,11 @@ public class WhiteBoardGUI extends JFrame {
         JToggleButton button = new JToggleButton(icon);
         button.addActionListener(e -> {
             currentTool = actionCommand;
-            updatesubToolBarShapeVisibility();
+            if ("Bin".equals(currentTool)) {
+                initCanvas(); // Assuming you want to clear with white color
+                clientSideHandler.sendUpdateToServer(new DeleteAll()); // Adjust this line based on how you handle clear actions on the server
+            }
+            updatesubToolBarVisibility();
         } );
         return button;
     }
@@ -198,7 +206,7 @@ public class WhiteBoardGUI extends JFrame {
         subToolBarShape.add(colorButton);
 
         subToolBarShape.setVisible(true);  // Initially visible
-        getContentPane().add(subToolBarShape, BorderLayout.NORTH);
+        dynamicToolBar.add(subToolBarShape, "Shape");
 
         // Listener to update the stroke based on spinner value change
         strokeSizeSpinner.addChangeListener(e -> {
@@ -207,63 +215,67 @@ public class WhiteBoardGUI extends JFrame {
         });
     }
 
-//    private void setupSubToolBarText() {
-//        subToolBarText = new JPanel();
-//        subToolBarText.setLayout(new FlowLayout(FlowLayout.CENTER));
-//
-//        // Font size selection
-//        JLabel fontSizeLabel = new JLabel(new ImageIcon("src/icons/fontSize.png"));  // Adjust icon path as needed
-//        SpinnerModel fontSizeModel = new SpinnerNumberModel(12, 8, 48, 1);  // Default 12, min 8, max 48, step 1
-//        JSpinner fontSizeSpinner = new JSpinner(fontSizeModel);
-//        fontSizeSpinner.setPreferredSize(new Dimension(50, 20));
-//
-//        // Font family selection
-//        JLabel fontLabel = new JLabel(new ImageIcon("src/icons/font.png"));  // Adjust icon path as needed
-//        String[] availableFonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
-//        JComboBox<String> fontComboBox = new JComboBox<>(availableFonts);
-//        fontComboBox.setSelectedItem("Arial");
-//
-//        fontSizeSpinner.addChangeListener(e -> {
-//            int newSize = (int) ((JSpinner) e.getSource()).getValue();
-//            Font currentFont = g2d.getFont();
-//            g2d.setFont(new Font(currentFont.getFontName(), currentFont.getStyle(), newSize));
-//        });
-//
-//        fontComboBox.addActionListener(e -> {
-//            String fontName = (String) ((JComboBox) e.getSource()).getSelectedItem();
-//            Font currentFont = g2d.getFont();
-//            g2d.setFont(new Font(fontName, currentFont.getStyle(), currentFont.getSize()));
-//        });
-//
-//        // Font color chooser
-//        JLabel fontColorLabel = new JLabel(new ImageIcon("src/icons/color.png"));  // Adjust icon path as needed
-//        JButton fontColorButton = new JButton("Choose Color");
-//        fontColorButton.addActionListener(e -> {
-//            Color newFontColor = JColorChooser.showDialog(null, "Choose Font Color", g2d.getColor());
-//            if (newFontColor != null) {
-//                g2d.setColor(newFontColor);  // Update the current drawing color to the chosen color
-//            }
-//        });
-//
-//        subToolBarText.add(fontSizeLabel);
-//        subToolBarText.add(fontSizeSpinner);
-//        subToolBarText.add(fontLabel);
-//        subToolBarText.add(fontComboBox);
-//        subToolBarText.add(Box.createHorizontalStrut(20));  // Adds spacing
-//        subToolBarText.add(fontColorLabel);
-//        subToolBarText.add(fontColorButton);
-//
-//        subToolBarText.setVisible(false);  // Initially hidden until the Text tool is selected
-//        getContentPane().add(subToolBarText, BorderLayout.NORTH);
-//    }
+    private void setupSubToolBarText() {
+        subToolBarText = new JPanel();
+        subToolBarText.setLayout(new FlowLayout(FlowLayout.CENTER));
 
-    private void updatesubToolBarShapeVisibility() {
-        // Determine which toolbar to show based on the selected tool
-        boolean isShape = Arrays.asList("FreeLine", "Line", "Circle", "Rectangle", "Oval").contains(currentTool);
-//        boolean isText = "Text".equals(currentTool);
+        // Font size selection
+        JLabel fontSizeLabel = new JLabel(new ImageIcon("src/icons/fontSize.png"));  // Adjust icon path as needed
+        SpinnerModel fontSizeModel = new SpinnerNumberModel(12, 8, 48, 1);  // Default 12, min 8, max 48, step 1
+        JSpinner fontSizeSpinner = new JSpinner(fontSizeModel);
+        fontSizeSpinner.setPreferredSize(new Dimension(50, 20));
 
-        subToolBarShape.setVisible(isShape);
-//        subToolBarText.setVisible(isText);  // Show text toolbar when the Text tool is selected
+        // Font family selection
+        JLabel fontLabel = new JLabel(new ImageIcon("src/icons/font.png"));  // Adjust icon path as needed
+        String[] availableFonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+        JComboBox<String> fontComboBox = new JComboBox<>(availableFonts);
+        fontComboBox.setSelectedItem("Arial");
+        fontComboBox.setPreferredSize(new Dimension(150, 20));
+
+        fontSizeSpinner.addChangeListener(e -> {
+            int newSize = (int) ((JSpinner) e.getSource()).getValue();
+            Font currentFont = g2d.getFont();
+            g2d.setFont(new Font(currentFont.getFontName(), currentFont.getStyle(), newSize));
+        });
+
+        fontComboBox.addActionListener(e -> {
+            String fontName = (String) ((JComboBox) e.getSource()).getSelectedItem();
+            Font currentFont = g2d.getFont();
+            g2d.setFont(new Font(fontName, currentFont.getStyle(), currentFont.getSize()));
+        });
+
+        // Font color chooser
+        JLabel fontColorLabel = new JLabel(new ImageIcon("src/icons/color.png"));  // Adjust icon path as needed
+        JButton fontColorButton = new JButton("Choose Color");
+        fontColorButton.addActionListener(e -> {
+            Color newFontColor = JColorChooser.showDialog(null, "Choose Font Color", g2d.getColor());
+            if (newFontColor != null) {
+                g2d.setColor(newFontColor);  // Update the current drawing color to the chosen color
+            }
+        });
+
+        subToolBarText.add(fontSizeLabel);
+        subToolBarText.add(fontSizeSpinner);
+        subToolBarText.add(Box.createHorizontalStrut(20));
+        subToolBarText.add(fontLabel);
+        subToolBarText.add(fontComboBox);
+        subToolBarText.add(Box.createHorizontalStrut(20));  // Adds spacing
+        subToolBarText.add(fontColorLabel);
+        subToolBarText.add(fontColorButton);
+
+        subToolBarText.setVisible(false);  // Initially hidden until the Text tool is selected
+        dynamicToolBar.add(subToolBarText, "Text");
+    }
+
+    private void updatesubToolBarVisibility() {
+        CardLayout cl = (CardLayout)(dynamicToolBar.getLayout());
+        if (Arrays.asList("FreeLine", "Line", "Circle", "Rectangle", "Oval").contains(currentTool)) {
+            cl.show(dynamicToolBar, "Shape");
+        } else if ("Text".equals(currentTool)) {
+            cl.show(dynamicToolBar, "Text");
+        } else {
+            cl.show(dynamicToolBar, "Empty"); // You can add an empty panel to hide both toolbars if needed
+        }
     }
 
     public void updateShape(DrawingShape shape, int x1, int y1, int x2, int y2) {
@@ -319,7 +331,7 @@ public class WhiteBoardGUI extends JFrame {
         }
     }
 
-    private void initCanvas() {
+    public void initCanvas() {
         canvas = new BufferedImage(800, 600, BufferedImage.TYPE_INT_ARGB);
         g2d = canvas.createGraphics();
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
