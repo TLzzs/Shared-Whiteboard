@@ -10,11 +10,12 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.NumberFormatter;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 public class WhiteBoardGUI extends JFrame {
@@ -26,9 +27,9 @@ public class WhiteBoardGUI extends JFrame {
     private final Logger logger = Logger.getLogger(WhiteBoardGUI.class.getName());
     private final ClientSideHandler clientSideHandler;
     private JToggleButton textButton;
+    private JPanel dynamicToolBar, subToolBarShape, subToolBarText, drawingPanel;
+    private Map<UUID, JTextCompositeKey> textFieldMap = new ConcurrentHashMap<>();
 
-    private JPanel dynamicToolBar;
-    private JPanel subToolBarShape, subToolBarText;
     public WhiteBoardGUI(ClientSideHandler clientSideHandler) {
         this.clientSideHandler = clientSideHandler;
         initUI();
@@ -50,7 +51,7 @@ public class WhiteBoardGUI extends JFrame {
         getContentPane().add(dynamicToolBar, BorderLayout.NORTH);
 
 
-        JPanel drawingPanel = new JPanel() {
+        drawingPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
@@ -146,6 +147,11 @@ public class WhiteBoardGUI extends JFrame {
         textField.requestFocusInWindow();
 
         // Handle the text input confirmation (e.g., Enter key)
+
+        TextOnBoard textOnBoard = new TextOnBoard(textField);
+        textFieldMap.put (textOnBoard.getUuid(), new JTextCompositeKey(textOnBoard, textField));
+
+        addTextFieldListener(textField, textOnBoard);
         textField.addActionListener(e -> {
             g2d.drawString(textField.getText(), textField.getX(), textField.getY());
             panel.remove(textField);
@@ -153,6 +159,9 @@ public class WhiteBoardGUI extends JFrame {
             panel.repaint();
         });
 
+    }
+
+    private void addTextFieldListener(JTextField textField, TextOnBoard textOnBoard) {
         textField.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -164,7 +173,7 @@ public class WhiteBoardGUI extends JFrame {
 
         textField.getDocument().addDocumentListener(new DocumentListener() {
             public void changedUpdate(DocumentEvent e) {
-                updateText();
+//                updateText();
             }
             public void removeUpdate(DocumentEvent e) {
                 updateText();
@@ -175,13 +184,18 @@ public class WhiteBoardGUI extends JFrame {
 
             private void updateText() {
                 String text = textField.getText();
-                FontMetrics metrics = textField.getFontMetrics(textField.getFont());
-                int textWidth = metrics.stringWidth(text) + 10; // Extra padding
-                int newWidth = Math.max(textWidth, 200); // Ensures that the text field does not shrink below the initial size
-                textField.setSize(newWidth, textField.getHeight());
-                panel.revalidate();
-                panel.repaint();
+                 if (textField.isFocusOwner()) {
+                    FontMetrics metrics = textField.getFontMetrics(textField.getFont());
+                    int textWidth = metrics.stringWidth(text) + 10; // Extra padding
+                    int newWidth = Math.max(textWidth, 200); // Ensures that the text field does not shrink below the initial size
+                    textField.setSize(newWidth, textField.getHeight());
+                    textOnBoard.update(textField);
+                    drawingPanel.revalidate();
+                    drawingPanel.repaint();
+                    clientSideHandler.sendUpdateToServer(textOnBoard);
+                }
             }
+
         });
     }
 
@@ -221,7 +235,7 @@ public class WhiteBoardGUI extends JFrame {
                 textButton = button;
             }
             if ("Bin".equals(currentTool)) {
-                initCanvas(); // Assuming you want to clear with white color
+                deleteAll();
                 clientSideHandler.sendUpdateToServer(new DeleteAll()); // Adjust this line based on how you handle clear actions on the server
             }
             updatesubToolBarVisibility();
@@ -271,7 +285,7 @@ public class WhiteBoardGUI extends JFrame {
         subToolBarShape.add(colorLabel);
         subToolBarShape.add(colorButton);
 
-        subToolBarShape.setVisible(true);  // Initially visible
+        subToolBarShape.setVisible(false);  // Initially visible
         dynamicToolBar.add(subToolBarShape, "Shape");
 
         // Listener to update the stroke based on spinner value change
@@ -430,5 +444,43 @@ public class WhiteBoardGUI extends JFrame {
             shape.execute(g2d);
             repaint();
         }
+    }
+
+    public void updateTextFields(TextOnBoard textField) {
+        JTextField jTextField;
+        if (!textFieldMap.containsKey(textField.getUuid())) {
+            jTextField = textField.createJTextField();
+            textFieldMap.put(textField.getUuid(), new JTextCompositeKey(textField, jTextField));
+            addTextFieldListener(jTextField, textField);
+            drawingPanel.add(jTextField);
+            drawingPanel.setLayout(null);
+            jTextField.setLayout(null);
+        } else {
+            jTextField = textFieldMap.get(textField.getUuid()).getjTextField();
+            jTextField.setText(textField.getText());
+            jTextField.setFont(textField.getFont());
+            jTextField.setForeground(textField.getColor());
+            jTextField.setOpaque(textField.isOpaque());
+            jTextField.setBorder(textField.getBorder());
+            jTextField.setLocation(textField.getX(), textField.getY());
+            jTextField.setSize(textField.getSize());
+        }
+        jTextField.addComponentListener(new ComponentAdapter() {
+            public void componentMoved(ComponentEvent e) {
+                System.out.println("TextField moved to: " + jTextField.getLocation());
+            }
+        });
+
+        drawingPanel.revalidate();
+        drawingPanel.repaint();
+    }
+
+    public void deleteAll() {
+        initCanvas();
+        textFieldMap.forEach((key, value) -> {
+            JTextField jTextField = value.getjTextField();
+            drawingPanel.remove(jTextField);
+        });
+        textFieldMap.clear();
     }
 }

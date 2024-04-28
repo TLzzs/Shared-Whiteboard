@@ -2,6 +2,7 @@ package Server;
 
 import DrawingObject.DeleteAll;
 import DrawingObject.DrawingShape;
+import DrawingObject.TextOnBoard;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -44,6 +45,9 @@ public class RequestHandler implements Runnable {
                     broadcastUpdate((DrawingShape) clientInput);
                 } else if (clientInput instanceof DeleteAll) {
                     broadcastDeleteAll((DeleteAll) clientInput);
+                }else {
+                    System.out.println("Received : " + ((TextOnBoard)clientInput ).getText() );
+                    broadcastUpdate(clientInput);
                 }
             }
         } catch (Exception e) {
@@ -67,7 +71,7 @@ public class RequestHandler implements Runnable {
         }
     }
 
-    private void broadcastUpdate(DrawingShape update) {
+    private void broadcastUpdate(Object update) {
         for (RequestHandler requestHandler : whiteBoardServer.getRequestHandler()) {
             if (!requestHandler.equals(this)) { // Avoid sending the command back to the sender
                 logger.info("broadcast to all client: "+ requestHandler.clientSocket.getRemoteSocketAddress());

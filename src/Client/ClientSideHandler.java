@@ -2,6 +2,7 @@ package Client;
 
 import DrawingObject.DeleteAll;
 import DrawingObject.DrawingShape;
+import DrawingObject.TextOnBoard;
 
 import javax.swing.*;
 import java.awt.*;
@@ -56,13 +57,20 @@ public class ClientSideHandler {
                 wb.updateDrawing(shape);
             });
         } else if (update instanceof DeleteAll) {
-            wb.initCanvas();
+            wb.deleteAll();
+        } else if (update instanceof TextOnBoard){
+            System.out.println("Received: " + ((TextOnBoard) update).getText());
+            TextOnBoard textOnBoard = (TextOnBoard) update;
+            SwingUtilities.invokeLater(() -> {
+                wb.updateTextFields(textOnBoard);
+            });
         }
     }
 
     public void sendUpdateToServer(Object update) {
         try {
             if (output != null) {
+                output.reset();
                 logger.info("sending update to server "+update.getClass());
                 output.writeObject(update);
                 output.flush();
