@@ -4,6 +4,9 @@ import DrawingObject.*;
 import DrawingObject.Rectangle;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.NumberFormatter;
 import java.awt.*;
@@ -22,6 +25,7 @@ public class WhiteBoardGUI extends JFrame {
     private DrawingShape tempShape;
     private final Logger logger = Logger.getLogger(WhiteBoardGUI.class.getName());
     private final ClientSideHandler clientSideHandler;
+    private JToggleButton textButton;
 
     private JPanel dynamicToolBar;
     private JPanel subToolBarShape, subToolBarText;
@@ -102,6 +106,10 @@ public class WhiteBoardGUI extends JFrame {
             public void mousePressed(MouseEvent e) {
                 oldX = e.getX();
                 oldY = e.getY();
+
+                if ("Text".equals(currentTool)) {
+                    createAndAddTextBox(drawingPanel, e.getX(), e.getY());
+                }
                 tempShape = createShape(oldX, oldY, oldX, oldY, g2d.getColor());
             }
 
@@ -120,6 +128,61 @@ public class WhiteBoardGUI extends JFrame {
         });
 
         getContentPane().add(drawingPanel, BorderLayout.CENTER);
+    }
+
+    private void createAndAddTextBox(JPanel panel, int x, int y) {
+        JTextField textField = new JTextField(10);
+        textField.setBorder(new EmptyBorder(0, 0, 0, 0)); // No border
+        textField.setOpaque(false); // Transparent background
+        textField.setLocation(x, y);
+        textField.setSize(textField.getPreferredSize());
+
+        // Style the text field
+        textField.setFont(g2d.getFont());
+        textField.setForeground(g2d.getColor());
+
+        panel.setLayout(null); // Set the layout to null for absolute positioning
+        panel.add(textField);
+        textField.requestFocusInWindow();
+
+        // Handle the text input confirmation (e.g., Enter key)
+        textField.addActionListener(e -> {
+            g2d.drawString(textField.getText(), textField.getX(), textField.getY());
+            panel.remove(textField);
+            panel.revalidate();
+            panel.repaint();
+        });
+
+        textField.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (textButton != null && !textButton.isSelected()) {
+                    textButton.doClick(); // Simulate clicking the "Text" button if not already selected
+                }
+            }
+        });
+
+        textField.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(DocumentEvent e) {
+                updateText();
+            }
+            public void removeUpdate(DocumentEvent e) {
+                updateText();
+            }
+            public void insertUpdate(DocumentEvent e) {
+                updateText();
+            }
+
+            private void updateText() {
+                String text = textField.getText();
+                FontMetrics metrics = textField.getFontMetrics(textField.getFont());
+                int textWidth = metrics.stringWidth(text) + 10; // Extra padding
+                int newWidth = Math.max(textWidth, 200); // Ensures that the text field does not shrink below the initial size
+                textField.setSize(newWidth, textField.getHeight());
+                panel.revalidate();
+                panel.repaint();
+            }
+        });
     }
 
     private void setupToolBar() {
@@ -154,6 +217,9 @@ public class WhiteBoardGUI extends JFrame {
         JToggleButton button = new JToggleButton(icon);
         button.addActionListener(e -> {
             currentTool = actionCommand;
+            if ("Text".equals(actionCommand)) {
+                textButton = button;
+            }
             if ("Bin".equals(currentTool)) {
                 initCanvas(); // Assuming you want to clear with white color
                 clientSideHandler.sendUpdateToServer(new DeleteAll()); // Adjust this line based on how you handle clear actions on the server
