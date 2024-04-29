@@ -25,18 +25,20 @@ public class WhiteBoardGUI extends JFrame {
     private final Logger logger = Logger.getLogger(WhiteBoardGUI.class.getName());
     private final ClientSideHandler clientSideHandler;
     private ToolBarHandler toolBarHandler;
+    private ChatWindowHandler chatWindowHandler;
     private JPanel dynamicToolBar, drawingPanel;
     private Map<UUID, JTextCompositeKey> textFieldMap = new ConcurrentHashMap<>();
 
     public WhiteBoardGUI(ClientSideHandler clientSideHandler) {
         this.clientSideHandler = clientSideHandler;
         this.toolBarHandler = new ToolBarHandler(g2d, this);
+        this.chatWindowHandler= new ChatWindowHandler();
         initUI();
     }
 
     private void initUI() {
         setTitle("WhiteBoard Client");
-        setSize(1200, 600);
+        setSize(1100, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -44,8 +46,11 @@ public class WhiteBoardGUI extends JFrame {
         JPanel toolBar = toolBarHandler.setupToolBar();
         getContentPane().add(toolBar, BorderLayout.WEST);
 
+        JPanel chatPanel = chatWindowHandler.setUpChatWindow();
+        getContentPane().add(chatPanel, BorderLayout.EAST);
+
         //dynamic sub tool bar
-        dynamicToolBar = new JPanel(new CardLayout()); // Use CardLayout to switch between panels
+        dynamicToolBar = new JPanel(new CardLayout());
         JPanel subToolBarShape = toolBarHandler.setupsubToolBarShape();
         JPanel subToolBarText = toolBarHandler.setupSubToolBarText();
         dynamicToolBar.add(subToolBarShape, "Shape");
