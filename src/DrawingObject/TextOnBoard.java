@@ -12,6 +12,7 @@ public class TextOnBoard implements Serializable {
     private Border border;
     private boolean isOpaque;
     private int x, y;
+    private boolean isDeleting;
 
     public UUID getUuid() {
         return uuid;
@@ -50,6 +51,14 @@ public class TextOnBoard implements Serializable {
         return color;
     }
 
+    public boolean isDeleting() {
+        return isDeleting;
+    }
+
+    public void setDeleting(boolean deleting) {
+        isDeleting = deleting;
+    }
+
     public TextOnBoard(JTextField textField) {
         this.uuid = UUID.randomUUID();
         this.border = textField.getBorder();
@@ -59,6 +68,7 @@ public class TextOnBoard implements Serializable {
         this.size = textField.getSize();
         this.font = textField.getFont();
         this.color = textField.getForeground();
+        this.isDeleting = false;
     }
 
     public String getText() {

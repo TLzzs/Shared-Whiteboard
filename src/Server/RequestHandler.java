@@ -45,8 +45,9 @@ public class RequestHandler implements Runnable {
                     broadcastUpdate((DrawingShape) clientInput);
                 } else if (clientInput instanceof DeleteAll) {
                     broadcastDeleteAll((DeleteAll) clientInput);
-                }else {
+                }else if (clientInput instanceof TextOnBoard){
                     System.out.println("Received : " + ((TextOnBoard)clientInput ).getText() );
+                    whiteBoardServer.updateTextOnBoard((TextOnBoard)clientInput);
                     broadcastUpdate(clientInput);
                 }
             }
@@ -89,8 +90,18 @@ public class RequestHandler implements Runnable {
         }
     }
 
-    public void sendInitialState(List<Object> currentState) {
+    public void sendInitialState(List<Object> currentState, List<TextOnBoard> textOnBoardList) {
         currentState.forEach(state -> {
+            try {
+                output.writeObject(state);
+                output.flush();
+            } catch (IOException e) {
+                logger.severe("Failed to send update to client: " + e.getMessage());
+            }
+        });
+
+
+        textOnBoardList.forEach(state -> {
             try {
                 output.writeObject(state);
                 output.flush();

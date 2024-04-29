@@ -1,6 +1,7 @@
 package Server;
 
 import DrawingObject.DrawingShape;
+import DrawingObject.TextOnBoard;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -8,6 +9,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class WhiteBoardState {
     private List<Object> drawingOperations = new CopyOnWriteArrayList<>();
     private final List<RequestHandler> requestHandlers = new CopyOnWriteArrayList<>();
+    private final List<TextOnBoard> textOnBoardList = new CopyOnWriteArrayList<>();
     public synchronized void updateState(DrawingShape operation) {
         drawingOperations.add(operation);
     }
@@ -25,5 +27,12 @@ public class WhiteBoardState {
     }
     public void deleteAllOperations (){
         drawingOperations = new CopyOnWriteArrayList<>();
+    }
+    public void addTextOnBoard(TextOnBoard textOnBoard) {
+        textOnBoardList.add(textOnBoard);
+    }
+
+    public List<TextOnBoard> getTextOnBoardList() {
+        return textOnBoardList;
     }
 }

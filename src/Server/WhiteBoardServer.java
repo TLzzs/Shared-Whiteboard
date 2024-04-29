@@ -1,6 +1,7 @@
 package Server;
 
 import DrawingObject.DrawingShape;
+import DrawingObject.TextOnBoard;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -34,7 +35,7 @@ public class WhiteBoardServer {
                     logger.info("Accepted connection from " + clientSocket.getRemoteSocketAddress());
                     RequestHandler requestHandler = new RequestHandler(clientSocket, this);
                     if (!sharedWhiteBoard.isFirstClient()) {
-                        requestHandler.sendInitialState(sharedWhiteBoard.getCurrentState());
+                        requestHandler.sendInitialState(sharedWhiteBoard.getCurrentState(), sharedWhiteBoard.getTextOnBoardList());
                     }
                     sharedWhiteBoard.addClientHandler(requestHandler);
                     threadPool.submit(requestHandler);
@@ -78,5 +79,11 @@ public class WhiteBoardServer {
 
     public void deleteAllOperations() {
         sharedWhiteBoard.deleteAllOperations();
+    }
+
+    public void updateTextOnBoard(TextOnBoard clientInput) {
+        if (!clientInput.isDeleting()) {
+            sharedWhiteBoard.addTextOnBoard(clientInput);
+        }
     }
 }

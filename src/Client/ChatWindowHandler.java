@@ -30,6 +30,7 @@ public class ChatWindowHandler {
 
         // Scroll pane for the chat messages area
         JScrollPane scrollPane = new JScrollPane(messagesContainer);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setBorder(null); // Remove the border for a cleaner look
         scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(5, Integer.MAX_VALUE)); // Thinner scrollbar
         chatPanel.add(scrollPane, BorderLayout.CENTER);
