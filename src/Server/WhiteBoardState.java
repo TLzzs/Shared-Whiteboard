@@ -3,13 +3,14 @@ package Server;
 import DrawingObject.DrawingShape;
 import DrawingObject.TextOnBoard;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class WhiteBoardState {
     private List<Object> drawingOperations = new CopyOnWriteArrayList<>();
     private final List<RequestHandler> requestHandlers = new CopyOnWriteArrayList<>();
-    private final List<TextOnBoard> textOnBoardList = new CopyOnWriteArrayList<>();
+    private List<TextOnBoard> textOnBoardList = new CopyOnWriteArrayList<>();
     public synchronized void updateState(DrawingShape operation) {
         drawingOperations.add(operation);
     }
@@ -23,7 +24,7 @@ public class WhiteBoardState {
         return requestHandlers;
     }
     public boolean isFirstClient() {
-        return requestHandlers.size() == 0;
+        return requestHandlers.size() == 1;
     }
     public void deleteAllOperations (){
         drawingOperations = new CopyOnWriteArrayList<>();
@@ -31,8 +32,25 @@ public class WhiteBoardState {
     public void addTextOnBoard(TextOnBoard textOnBoard) {
         textOnBoardList.add(textOnBoard);
     }
+    public void deleteAllTextOnBoard () {
+        textOnBoardList = new CopyOnWriteArrayList<>();
+    }
 
     public List<TextOnBoard> getTextOnBoardList() {
         return textOnBoardList;
+    }
+
+    public boolean checkUserNameDuplicate(String username) {
+        for (Iterator<RequestHandler> iterator = requestHandlers.iterator(); ((Iterator<?>) iterator).hasNext();) {
+            RequestHandler client = iterator.next();
+            if (client.getUserName() != null && client.getUserName().equals(username)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void deleteRequestHandler(RequestHandler requestHandler) {
+        requestHandlers.remove(requestHandler);
     }
 }

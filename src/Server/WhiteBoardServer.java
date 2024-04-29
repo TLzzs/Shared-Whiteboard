@@ -2,25 +2,31 @@ package Server;
 
 import DrawingObject.DrawingShape;
 import DrawingObject.TextOnBoard;
+import ShakeHands.InitialCommunication;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
+import static ShakeHands.ConnectUtil.*;
+
 public class WhiteBoardServer {
     private final int port;
     private final Logger logger;
     private final ExecutorService threadPool;
-    private final WhiteBoardState sharedWhiteBoard;
+    private WhiteBoardState sharedWhiteBoard;
+    private List<Socket> socketList;
 
     public WhiteBoardServer(int port, Logger logger) {
         this.port = port;
         this.logger = logger;
         this.sharedWhiteBoard = new WhiteBoardState();
+        this.socketList = new ArrayList<>();
         threadPool = Executors.newFixedThreadPool(10);
 
         startServer();
@@ -32,11 +38,9 @@ public class WhiteBoardServer {
             while (true) {
                 try {
                     Socket clientSocket = serverSocket.accept();
+                    socketList.add(clientSocket);
                     logger.info("Accepted connection from " + clientSocket.getRemoteSocketAddress());
                     RequestHandler requestHandler = new RequestHandler(clientSocket, this);
-                    if (!sharedWhiteBoard.isFirstClient()) {
-                        requestHandler.sendInitialState(sharedWhiteBoard.getCurrentState(), sharedWhiteBoard.getTextOnBoardList());
-                    }
                     sharedWhiteBoard.addClientHandler(requestHandler);
                     threadPool.submit(requestHandler);
                 } catch (IOException e) {
@@ -86,4 +90,51 @@ public class WhiteBoardServer {
             sharedWhiteBoard.addTextOnBoard(clientInput);
         }
     }
+
+    public int checkInitCommand(InitialCommunication clientInput, RequestHandler requestHandler){
+        logger.info("Size: " + sharedWhiteBoard.getRequestHandler().size());
+        boolean isCreate = clientInput.getCommand().equals(CREATE_COMMAND);
+        boolean isFirstClient = sharedWhiteBoard.isFirstClient();
+        boolean hasDuplicateUserName = sharedWhiteBoard.checkUserNameDuplicate(clientInput.getUsername());
+        logger.info("after check duplicate Size: " + sharedWhiteBoard.getRequestHandler().size());
+        if (hasDuplicateUserName) {
+            sharedWhiteBoard.deleteRequestHandler(requestHandler);
+            return UserNameDuplicate;
+        }
+        requestHandler.setUserName(clientInput.getUsername());
+        if ((isCreate && isFirstClient) ) {
+            requestHandler.setAdmin(true);
+            return Accept;
+        } else if (!isCreate && !isFirstClient) {
+            requestHandler.setAdmin(false);
+            return Accept;
+        } else if (!isCreate && isFirstClient) {
+            return JoinFailed;
+        }
+        return CreateFailed;
+    }
+
+    public void removeRequestHandler(RequestHandler requestHandler) {
+        sharedWhiteBoard.deleteRequestHandler(requestHandler);
+    }
+
+//    public void notifyAdminDisconnect() {
+//        sharedWhiteBoard.getRequestHandler().forEach(RequestHandler::raiseEOF);
+//    }
+
+    public List<Object> getCurrentState() {
+        return sharedWhiteBoard.getCurrentState();
+    }
+
+    public List<TextOnBoard> getTextOnBoardList() {
+        return sharedWhiteBoard.getTextOnBoardList();
+    }
+
+    public void deleteAllTextOnBoard() {
+        sharedWhiteBoard.deleteAllTextOnBoard();
+    }
+
+//    public void cleanAll() {
+//        this.sharedWhiteBoard = new WhiteBoardState();
+//    }
 }

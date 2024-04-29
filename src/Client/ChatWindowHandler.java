@@ -67,7 +67,7 @@ public class ChatWindowHandler {
 
         JLabel statusLabel = new JLabel(" ");
         statusLabel.setForeground(Color.RED); // Red text to signify an error or important message
-        statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 10)); // Small, modern font
+        statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 10));
         inputPanel.add(statusLabel, BorderLayout.NORTH);
 
         // Add action listeners for sending messages

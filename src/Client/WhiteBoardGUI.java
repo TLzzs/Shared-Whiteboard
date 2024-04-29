@@ -252,6 +252,7 @@ public class WhiteBoardGUI extends JFrame {
             drawingPanel.remove(jTextField);
         });
         textFieldMap.clear();
+        repaint();
     }
 
     public void sendUpdateToServer(Object update) {

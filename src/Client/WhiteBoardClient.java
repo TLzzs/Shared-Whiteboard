@@ -1,19 +1,26 @@
 package Client;
 
+import ShakeHands.InitialCommunication;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.logging.Logger;
 
+import static ShakeHands.ConnectUtil.isValidCommand;
+
 public class WhiteBoardClient {
     private Socket socket;
     private final String serverAddress;
     private final int port;
-    private final Logger logger = Logger.getLogger(WhiteBoardClient.class.getName());
+    private final InitialCommunication initialCommunication;
+    private final Logger logger;
 
-    public WhiteBoardClient(String serverAddress, int port) {
+    public WhiteBoardClient(String serverAddress, int port, InitialCommunication initialCommunication, Logger logger) {
         this.serverAddress = serverAddress;
         this.port = port;
+        this.initialCommunication = initialCommunication;
+        this.logger = logger;
     }
 
     public void connectToServer() {
@@ -22,7 +29,7 @@ public class WhiteBoardClient {
             logger.info("Successfully connected to server at " + serverAddress + ":" + port);
             ClientSideHandler handler = new ClientSideHandler(socket, logger, this);
             handler.startWhiteBoard();
-            handler.startCommunication();
+            handler.startCommunication(initialCommunication);
         } catch (UnknownHostException e) {
             logger.severe("Host could not be determined: " + e.getMessage());
             throw new RuntimeException(e);
@@ -35,18 +42,37 @@ public class WhiteBoardClient {
         }
     }
 
-
-
     public static void main(String[] args) {
-        if (args.length < 2) {
-            System.err.println("Usage: java WhiteBoardClient <server address> <port number>");
-            return;
-        }
-        String serverAddress = args[0];
-        int port = Integer.parseInt(args[1]);
+        Logger logger = Logger.getLogger(WhiteBoardClient.class.getName());
+        try {
+            if (args.length != 4) {
+                throw new IllegalArgumentException("Usage: java WhiteBoardClient <server address> <port number> <command> <username>");
+            }
 
-        WhiteBoardClient client = new WhiteBoardClient(serverAddress, port);
-        client.connectToServer();
+            String serverAddress = args[1];
+            int port = Integer.parseInt(args[2]);
+            if (port < 1 || port > 65535) {
+                throw new IllegalArgumentException("Error: Port number must be between 1 and 65535.");
+            }
+
+            String command = args[0];
+            if (!isValidCommand(command)) {
+                throw new IllegalArgumentException("Error: Invalid command. Please provide a valid command.");
+            }
+
+            WhiteBoardClient client = new WhiteBoardClient(serverAddress, port, new InitialCommunication(args[0], args[3]), logger);
+            client.connectToServer();
+        } catch (NumberFormatException e) {
+            logger.severe("Error: Invalid port number. Port number must be a numeric value.");
+            System.exit(1);
+        } catch (IllegalArgumentException e) {
+            logger.severe("Error: Invalid command. Please provide a valid command action.");
+            System.exit(1);
+        } catch (Exception e) {
+            logger.severe("An unexpected error occurred: " + e.getMessage());
+            System.exit(1);
+        }
     }
+
 
 }

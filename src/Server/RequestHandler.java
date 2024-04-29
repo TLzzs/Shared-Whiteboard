@@ -3,7 +3,9 @@ package Server;
 import DrawingObject.DeleteAll;
 import DrawingObject.DrawingShape;
 import DrawingObject.TextOnBoard;
+import ShakeHands.InitialCommunication;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -12,11 +14,31 @@ import java.util.List;
 import java.util.logging.Logger;
 
 public class RequestHandler implements Runnable {
+
+    private boolean isAdmin;
+    private String userName;
     private final Logger logger = Logger.getLogger(RequestHandler.class.getName());
     private final Socket clientSocket;
     private final WhiteBoardServer whiteBoardServer;
     private ObjectInputStream input;
     private ObjectOutputStream output;
+
+    public boolean isAdmin() {
+        return isAdmin;
+    }
+
+    public void setAdmin(boolean admin) {
+        isAdmin = admin;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
     public RequestHandler(Socket clientSocket, WhiteBoardServer whiteBoardServer) {
         this.clientSocket = clientSocket;
         this.whiteBoardServer = whiteBoardServer;
@@ -49,22 +71,43 @@ public class RequestHandler implements Runnable {
                     System.out.println("Received : " + ((TextOnBoard)clientInput ).getText() );
                     whiteBoardServer.updateTextOnBoard((TextOnBoard)clientInput);
                     broadcastUpdate(clientInput);
+                } else if (clientInput instanceof InitialCommunication) {
+                    sendStatusCode(whiteBoardServer.checkInitCommand((InitialCommunication) clientInput, this));
+//                    if (!isAdmin) {
+                        sendInitialState(whiteBoardServer.getCurrentState(), whiteBoardServer.getTextOnBoardList());
+//                    }
+
                 }
             }
-        } catch (Exception e) {
+        } catch (EOFException e) {
+            logger.info("Connection closed by client");
+        }
+        catch (Exception e) {
             logger.severe("Error handling client: " + e.getMessage());
         } finally {
             try {
                 clientSocket.close();
+                whiteBoardServer.removeRequestHandler(this);
+//                if (isAdmin) {
+//                    logger.info("notifying and cleaning");
+////                    whiteBoardServer.cleanAll();
+//                }
+
             } catch (IOException e) {
                 logger.severe("Error closing client socket: " + e.getMessage());
             }
         }
     }
 
+
+    private void sendStatusCode(int statusCode) {
+        sendUpdate(statusCode);
+    }
+
     private void broadcastDeleteAll(DeleteAll deleteAll) {
         for (RequestHandler requestHandler : whiteBoardServer.getRequestHandler()) {
             whiteBoardServer.deleteAllOperations();
+            whiteBoardServer.deleteAllTextOnBoard();
             if (!requestHandler.equals(this)) { // Avoid sending the command back to the sender
                 logger.info("broadcast to all client: "+ requestHandler.clientSocket.getRemoteSocketAddress());
                 requestHandler.sendUpdate(deleteAll);

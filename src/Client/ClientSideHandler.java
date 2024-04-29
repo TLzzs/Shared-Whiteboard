@@ -3,14 +3,16 @@ package Client;
 import DrawingObject.DeleteAll;
 import DrawingObject.DrawingShape;
 import DrawingObject.TextOnBoard;
+import ShakeHands.InitialCommunication;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.logging.Logger;
+
+import static ShakeHands.ConnectUtil.*;
 
 public class ClientSideHandler {
     private final Socket socket;
@@ -26,14 +28,41 @@ public class ClientSideHandler {
         this.client = client;
     }
 
-    public void startCommunication() {
+    public void startCommunication(InitialCommunication initialCommunication) {
         try {
             output = new ObjectOutputStream(socket.getOutputStream());
             input = new ObjectInputStream(socket.getInputStream());
+            output.writeObject(initialCommunication);
+            output.flush();
+
+            int statusCode =  waitTilServerReply();
+
+            actionOnStatusCode(statusCode);
             // Start a thread to listen for server updates
             new Thread(this::listenForServerUpdates).start();
         } catch (IOException e) {
             logger.severe("Error initializing communication streams: " + e.getMessage());
+        }
+    }
+
+    private void actionOnStatusCode(int statusCode) {
+        logger.info("received status code: "+ statusCode);
+        if (statusCode == Accept) {
+            return;
+        }
+        printErrorStatusInfo(statusCode, logger);
+        closeConnection();
+        System.exit(1);
+    }
+
+    private int waitTilServerReply() throws IOException {
+        while (true) {
+            try {
+                return (int) input.readObject();
+            } catch (ClassNotFoundException | IOException e) {
+                logger.severe("Error reading object from server: " + e.getMessage());
+                throw new IOException("Class not found: " + e.getMessage()); // Rethrow as IOException
+            }
         }
     }
 
@@ -44,7 +73,7 @@ public class ClientSideHandler {
                 handleServerUpdate(update);
             }
         } catch (IOException | ClassNotFoundException e) {
-            logger.severe("Error reading from server: " + e.getMessage());
+            logger.severe("Error reading from server from listener: " + e.getMessage());
             closeConnection();
         }
     }
@@ -52,14 +81,13 @@ public class ClientSideHandler {
     private void handleServerUpdate(Object update) {
         if (update instanceof DrawingShape) {  // Assuming 'Shape' is a class for graphical objects
             DrawingShape shape = (DrawingShape) update;
-            logger.info("receive from server: " + shape.getClass());
             SwingUtilities.invokeLater(() -> {
                 wb.updateDrawing(shape);
             });
         } else if (update instanceof DeleteAll) {
+            System.out.println("receive delete");
             wb.deleteAll();
         } else if (update instanceof TextOnBoard){
-            System.out.println("Received: " + ((TextOnBoard) update).getText());
             TextOnBoard textOnBoard = (TextOnBoard) update;
             SwingUtilities.invokeLater(() -> {
                 wb.updateTextFields(textOnBoard);
@@ -71,7 +99,6 @@ public class ClientSideHandler {
         try {
             if (output != null) {
                 output.reset();
-                logger.info("sending update to server "+update.getClass());
                 output.writeObject(update);
                 output.flush();
             }
