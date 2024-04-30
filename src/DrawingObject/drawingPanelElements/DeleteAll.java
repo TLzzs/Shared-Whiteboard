@@ -1,4 +1,4 @@
-package DrawingObject;
+package DrawingObject.drawingPanelElements;
 
 import java.io.Serializable;
 

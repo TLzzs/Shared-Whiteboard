@@ -1,7 +1,7 @@
 package Server;
 
-import DrawingObject.DrawingShape;
-import DrawingObject.TextOnBoard;
+import DrawingObject.Shape.DrawingShape;
+import DrawingObject.drawingPanelElements.TextOnBoard;
 import ShakeHands.InitialCommunication;
 import ShakeHands.Notice;
 
@@ -14,7 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
-import static ShakeHands.ConnectUtil.*;
+import static ShakeHands.Util.ConnectUtil.*;
 
 public class WhiteBoardServer {
     private final int port;
@@ -106,10 +106,10 @@ public class WhiteBoardServer {
         requestHandler.setNotice(new Notice(clientInput.getUsername(), false));
         if ((isCreate && isFirstClient) ) {
             requestHandler.setAdmin(true);
-            return Accept;
+            return AcceptCreate;
         } else if (!isCreate && !isFirstClient) {
             requestHandler.setAdmin(false);
-            return Accept;
+            return AcceptJoin;
         } else if (!isCreate && isFirstClient) {
             return JoinFailed;
         }

@@ -1,7 +1,7 @@
-package Client;
+package Client.Utility;
 
-import DrawingObject.*;
-import DrawingObject.Rectangle;
+import DrawingObject.Shape.Rectangle;
+import DrawingObject.Shape.*;
 
 import java.awt.*;
 

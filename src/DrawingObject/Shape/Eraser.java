@@ -1,4 +1,6 @@
-package DrawingObject;
+package DrawingObject.Shape;
+
+import DrawingObject.Shape.DrawingShape;
 
 import java.awt.*;
 

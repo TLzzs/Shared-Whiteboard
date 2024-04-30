@@ -1,4 +1,4 @@
-package ShakeHands;
+package ShakeHands.Util;
 
 import java.util.logging.Logger;
 
@@ -6,7 +6,8 @@ public class ConnectUtil {
     public static String message;
     public static final String CREATE_COMMAND = "CreateWhiteBoard";
     public static final String JOIN_COMMAND = "JoinWhiteBoard";
-    public static final int Accept = 200;
+    public static final int AcceptCreate = 200;
+    public static final int AcceptJoin = 201;
     public static final int UserNameDuplicate = 401;
     public static final int CreateFailed = 400;
     public static final int JoinFailed = 402;

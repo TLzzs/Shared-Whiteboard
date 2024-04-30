@@ -1,4 +1,4 @@
-package DrawingObject;
+package DrawingObject.Shape;
 
 import java.awt.*;
 import java.io.Serializable;

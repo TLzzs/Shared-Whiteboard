@@ -7,7 +7,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.logging.Logger;
 
-import static ShakeHands.ConnectUtil.isValidCommand;
+import static ShakeHands.Util.ConnectUtil.isValidCommand;
 
 public class WhiteBoardClient {
     private Socket socket;

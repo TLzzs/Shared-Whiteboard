@@ -1,9 +1,9 @@
 package Client;
 
-import DrawingObject.DeleteAll;
-import DrawingObject.DrawingShape;
-import DrawingObject.PopupWindow;
-import DrawingObject.TextOnBoard;
+import DrawingObject.drawingPanelElements.DeleteAll;
+import DrawingObject.Shape.DrawingShape;
+import DrawingObject.InitWindow.PopupWindow;
+import DrawingObject.drawingPanelElements.TextOnBoard;
 import ShakeHands.CloseMessage;
 import ShakeHands.InitialCommunication;
 import ShakeHands.Notice;
@@ -15,7 +15,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.logging.Logger;
 
-import static ShakeHands.ConnectUtil.*;
+import static ShakeHands.Util.ConnectUtil.*;
 
 public class ClientSideHandler {
     private final Socket socket;
@@ -50,7 +50,11 @@ public class ClientSideHandler {
 
     private void actionOnStatusCode(int statusCode) {
         logger.info("received status code: "+ statusCode);
-        if (statusCode == Accept) {
+        if (statusCode == AcceptCreate) {
+            wb.setAdmin(true);
+            return;
+        }else if (statusCode == AcceptJoin) {
+            wb.setAdmin(false);
             return;
         }
         printErrorStatusInfo(statusCode, logger);

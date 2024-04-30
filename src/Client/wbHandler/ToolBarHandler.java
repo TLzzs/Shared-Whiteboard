@@ -1,6 +1,7 @@
-package Client;
+package Client.wbHandler;
 
-import DrawingObject.DeleteAll;
+import Client.WhiteBoardGUI;
+import DrawingObject.drawingPanelElements.DeleteAll;
 
 import javax.swing.*;
 import javax.swing.text.DefaultFormatterFactory;

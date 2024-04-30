@@ -1,4 +1,4 @@
-package DrawingObject;
+package DrawingObject.InitWindow;
 
 import javax.swing.*;
 import java.awt.*;

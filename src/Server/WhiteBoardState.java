@@ -1,7 +1,7 @@
 package Server;
 
-import DrawingObject.DrawingShape;
-import DrawingObject.TextOnBoard;
+import DrawingObject.Shape.DrawingShape;
+import DrawingObject.drawingPanelElements.TextOnBoard;
 
 import java.util.Iterator;
 import java.util.List;

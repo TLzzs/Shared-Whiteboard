@@ -1,8 +1,8 @@
 package Server;
 
-import DrawingObject.DeleteAll;
-import DrawingObject.DrawingShape;
-import DrawingObject.TextOnBoard;
+import DrawingObject.drawingPanelElements.DeleteAll;
+import DrawingObject.Shape.DrawingShape;
+import DrawingObject.drawingPanelElements.TextOnBoard;
 import ShakeHands.CloseMessage;
 import ShakeHands.InitialCommunication;
 import ShakeHands.Notice;

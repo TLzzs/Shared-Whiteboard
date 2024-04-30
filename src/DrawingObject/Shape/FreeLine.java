@@ -1,8 +1,10 @@
-package DrawingObject;
+package DrawingObject.Shape;
+
+import DrawingObject.Shape.DrawingShape;
 
 import java.awt.*;
 
-public class FreeLine implements DrawingShape{
+public class FreeLine implements DrawingShape {
     private final int startX, startY, endX, endY;
     private final Color color;
     private final float strokeWidth;

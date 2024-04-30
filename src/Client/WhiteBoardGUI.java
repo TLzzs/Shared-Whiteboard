@@ -1,6 +1,12 @@
 package Client;
 
-import DrawingObject.*;
+import Client.wbHandler.ChatWindowHandler;
+import Client.wbHandler.ToolBarHandler;
+import DrawingObject.InitWindow.NoticeMessage;
+import DrawingObject.Shape.DrawingShape;
+import DrawingObject.Shape.Eraser;
+import DrawingObject.drawingPanelElements.JTextCompositeKey;
+import DrawingObject.drawingPanelElements.TextOnBoard;
 import ShakeHands.Notice;
 
 import javax.swing.*;
@@ -14,11 +20,22 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-import static Client.TextFieldUtility.addTextFieldListener;
-import static Client.shapeUtility.createShape;
-import static Client.shapeUtility.updateShape;
+import static Client.Utility.TextFieldUtility.addTextFieldListener;
+import static Client.Utility.shapeUtility.createShape;
+import static Client.Utility.shapeUtility.updateShape;
 
 public class WhiteBoardGUI extends JFrame {
+
+    private boolean isAdmin;
+
+    public boolean isAdmin() {
+        return isAdmin;
+    }
+
+    public void setAdmin(boolean admin) {
+        isAdmin = admin;
+    }
+
     private BufferedImage canvas;
     private Graphics2D g2d;
     private int currentX, currentY, oldX, oldY;

@@ -1,6 +1,7 @@
-package Client;
+package Client.Utility;
 
-import DrawingObject.TextOnBoard;
+import Client.WhiteBoardGUI;
+import DrawingObject.drawingPanelElements.TextOnBoard;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;

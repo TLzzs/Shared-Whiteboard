@@ -1,4 +1,4 @@
-package Client;
+package Client.wbHandler;
 
 import javax.swing.*;
 import java.awt.*;
