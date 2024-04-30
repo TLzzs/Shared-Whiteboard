@@ -4,6 +4,7 @@ import DrawingObject.drawingPanelElements.DeleteAll;
 import DrawingObject.Shape.DrawingShape;
 import DrawingObject.InitWindow.PopupWindow;
 import DrawingObject.drawingPanelElements.TextOnBoard;
+import ShakeHands.ChatWindow.Message;
 import ShakeHands.CloseMessage;
 import ShakeHands.InitialCommunication;
 import ShakeHands.Notice;
@@ -40,7 +41,7 @@ public class ClientSideHandler {
 
             int statusCode =  waitTilServerReply();
 
-            actionOnStatusCode(statusCode);
+            actionOnStatusCode(statusCode, initialCommunication);
             // Start a thread to listen for server updates
             new Thread(this::listenForServerUpdates).start();
         } catch (IOException e) {
@@ -48,12 +49,14 @@ public class ClientSideHandler {
         }
     }
 
-    private void actionOnStatusCode(int statusCode) {
+    private void actionOnStatusCode(int statusCode, InitialCommunication initialCommunication) {
         logger.info("received status code: "+ statusCode);
         if (statusCode == AcceptCreate) {
             wb.setAdmin(true);
+            wb.setUserName(initialCommunication.getUsername());
             return;
         }else if (statusCode == AcceptJoin) {
+            wb.setUserName(initialCommunication.getUsername());
             wb.setAdmin(false);
             return;
         }
@@ -119,6 +122,9 @@ public class ClientSideHandler {
             SwingUtilities.invokeLater(() -> {
                 wb.showNotice(notice);
             });
+        } else if (update instanceof Message) {
+            Message msg = (Message) update;
+            wb.updateChatWindow(msg);
         }
     }
 

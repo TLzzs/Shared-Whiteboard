@@ -7,6 +7,7 @@ import DrawingObject.Shape.DrawingShape;
 import DrawingObject.Shape.Eraser;
 import DrawingObject.drawingPanelElements.JTextCompositeKey;
 import DrawingObject.drawingPanelElements.TextOnBoard;
+import ShakeHands.ChatWindow.Message;
 import ShakeHands.Notice;
 
 import javax.swing.*;
@@ -14,6 +15,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
@@ -27,6 +29,15 @@ import static Client.Utility.shapeUtility.updateShape;
 public class WhiteBoardGUI extends JFrame {
 
     private boolean isAdmin;
+    private String userName;
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
     public boolean isAdmin() {
         return isAdmin;
@@ -64,7 +75,7 @@ public class WhiteBoardGUI extends JFrame {
         JPanel toolBar = toolBarHandler.setupToolBar();
         getContentPane().add(toolBar, BorderLayout.WEST);
 
-        JPanel chatPanel = chatWindowHandler.setUpChatWindow();
+        JPanel chatPanel = chatWindowHandler.setUpChatWindow(this);
         getContentPane().add(chatPanel, BorderLayout.EAST);
 
         //dynamic sub tool bar
@@ -293,4 +304,12 @@ public class WhiteBoardGUI extends JFrame {
     }
 
 
+    public void sendChatMessage(String message) {
+        Message msg = new Message(userName, message,new Timestamp(System.currentTimeMillis()));
+        sendUpdateToServer(msg);
+    }
+
+    public void updateChatWindow(Message msg) {
+        chatWindowHandler.updateChatWindow(msg);
+    }
 }

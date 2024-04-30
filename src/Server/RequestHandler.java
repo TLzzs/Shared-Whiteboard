@@ -3,6 +3,7 @@ package Server;
 import DrawingObject.drawingPanelElements.DeleteAll;
 import DrawingObject.Shape.DrawingShape;
 import DrawingObject.drawingPanelElements.TextOnBoard;
+import ShakeHands.ChatWindow.Message;
 import ShakeHands.CloseMessage;
 import ShakeHands.InitialCommunication;
 import ShakeHands.Notice;
@@ -87,7 +88,9 @@ public class RequestHandler implements Runnable {
                     if (!isAdmin) {
                         sendInitialState(whiteBoardServer.getCurrentState(), whiteBoardServer.getTextOnBoardList());
                     }
-
+                } else if (clientInput instanceof Message) {
+                    System.out.println("received Message"+ ((Message) clientInput).getSender() + ((Message) clientInput).getContent());
+                    broadcastUpdate(clientInput);
                 }
             }
         } catch (EOFException e) {

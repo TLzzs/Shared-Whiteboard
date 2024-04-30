@@ -1,11 +1,15 @@
 package Client.wbHandler;
 
+import Client.WhiteBoardGUI;
+import ShakeHands.ChatWindow.Message;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 
 public class ChatWindowHandler {
-    public JPanel setUpChatWindow() {
+    private JTextArea chatMessagesArea;
+    public JPanel setUpChatWindow(WhiteBoardGUI whiteBoardGUI) {
         // Chat panel setup
         JPanel chatPanel = new JPanel();
         chatPanel.setLayout(new BorderLayout());
@@ -14,7 +18,7 @@ public class ChatWindowHandler {
         chatPanel.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, new Color(200, 200, 200))); // 1-pixel wide light gray border
 
         // Chat messages area setup
-        JTextArea chatMessagesArea = new JTextArea();
+        chatMessagesArea = new JTextArea();
         chatMessagesArea.setEditable(false);
         chatMessagesArea.setLineWrap(true);
         chatMessagesArea.setWrapStyleWord(true);
@@ -76,7 +80,8 @@ public class ChatWindowHandler {
             messageInputField.setText("");
             if (!message.isEmpty() ) {
                 chatMessagesArea.append("You: " + message + "\n");
-                chatMessagesArea.setCaretPosition(chatMessagesArea.getDocument().getLength()); // Auto-scroll to the latest message
+                chatMessagesArea.setCaretPosition(chatMessagesArea.getDocument().getLength());
+                whiteBoardGUI.sendChatMessage(message);
             } else {
                 statusLabel.setText("！The message cannot be empty.");
                 Timer timer = new Timer(3000, event -> {
@@ -90,6 +95,13 @@ public class ChatWindowHandler {
         messageInputField.addActionListener(sendMessageListener);
 
         return chatPanel;
+    }
+
+    public void updateChatWindow(Message message) {
+        SwingUtilities.invokeLater(() -> {
+            chatMessagesArea.append(message.getSender() + ": " + message.getContent() + "\n");
+            chatMessagesArea.setCaretPosition(chatMessagesArea.getDocument().getLength());
+        });
     }
 
 
