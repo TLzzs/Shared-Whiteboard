@@ -2,8 +2,11 @@ package Client;
 
 import DrawingObject.DeleteAll;
 import DrawingObject.DrawingShape;
+import DrawingObject.PopupWindow;
 import DrawingObject.TextOnBoard;
+import ShakeHands.CloseMessage;
 import ShakeHands.InitialCommunication;
+import ShakeHands.Notice;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -51,8 +54,13 @@ public class ClientSideHandler {
             return;
         }
         printErrorStatusInfo(statusCode, logger);
-        closeConnection();
-        System.exit(1);
+        SwingUtilities.invokeLater(() -> {
+            PopupWindow popup = new PopupWindow(message, () -> {
+                closeConnection();
+                System.exit(1);
+            });
+            popup.adminClose();
+        });
     }
 
     private int waitTilServerReply() throws IOException {
@@ -91,6 +99,21 @@ public class ClientSideHandler {
             TextOnBoard textOnBoard = (TextOnBoard) update;
             SwingUtilities.invokeLater(() -> {
                 wb.updateTextFields(textOnBoard);
+            });
+        } else if (update instanceof CloseMessage) {
+            SwingUtilities.invokeLater(() -> {
+                PopupWindow popup = new PopupWindow("Admin has closed the whiteboard, logging you out", () -> {
+                    closeConnection();
+                    System.exit(1);
+                });
+                popup.adminClose();
+            });
+        } else if (update instanceof Notice) {
+            Notice notice = (Notice) update;
+            System.out.println("received notice: " + notice.getUsername() + notice.isLeaving());
+
+            SwingUtilities.invokeLater(() -> {
+                wb.showNotice(notice);
             });
         }
     }

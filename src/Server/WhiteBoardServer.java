@@ -3,6 +3,7 @@ package Server;
 import DrawingObject.DrawingShape;
 import DrawingObject.TextOnBoard;
 import ShakeHands.InitialCommunication;
+import ShakeHands.Notice;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -102,6 +103,7 @@ public class WhiteBoardServer {
             return UserNameDuplicate;
         }
         requestHandler.setUserName(clientInput.getUsername());
+        requestHandler.setNotice(new Notice(clientInput.getUsername(), false));
         if ((isCreate && isFirstClient) ) {
             requestHandler.setAdmin(true);
             return Accept;
@@ -134,7 +136,8 @@ public class WhiteBoardServer {
         sharedWhiteBoard.deleteAllTextOnBoard();
     }
 
-//    public void cleanAll() {
-//        this.sharedWhiteBoard = new WhiteBoardState();
-//    }
+    public void cleanAllCache() {
+        this.sharedWhiteBoard = new WhiteBoardState();
+    }
+
 }

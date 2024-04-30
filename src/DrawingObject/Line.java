@@ -18,9 +18,13 @@ public class Line implements DrawingShape {
 
     @Override
     public void execute(Graphics2D g2d) {
+        Color currentColor = g2d.getColor();
+        Stroke currentStroke = g2d.getStroke();
         g2d.setColor(color);
         g2d.setStroke(new BasicStroke(strokeWidth));
         g2d.drawLine(x1, y1, x2, y2);
+        g2d.setColor(currentColor);
+        g2d.setStroke(currentStroke);
     }
 
     public void update(int newX1, int newY1, int newX2, int newY2) {

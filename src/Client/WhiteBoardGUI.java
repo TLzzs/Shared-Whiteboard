@@ -1,6 +1,7 @@
 package Client;
 
 import DrawingObject.*;
+import ShakeHands.Notice;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -258,4 +259,21 @@ public class WhiteBoardGUI extends JFrame {
     public void sendUpdateToServer(Object update) {
         clientSideHandler.sendUpdateToServer(update);
     }
+
+    public void showNotice(Notice notice) {
+        String userName = notice.getUsername();
+        boolean isLeaving = notice.isLeaving();
+
+        // Construct the notice message based on whether the user is leaving or joining
+        String noticeMessage;
+        if (isLeaving) {
+            noticeMessage = userName + " has left the whiteboard.";
+        } else {
+            noticeMessage = userName + " has joined the whiteboard.";
+        }
+        NoticeMessage noticeDialog = new NoticeMessage(this, noticeMessage);
+        noticeDialog.setVisible(true);
+    }
+
+
 }

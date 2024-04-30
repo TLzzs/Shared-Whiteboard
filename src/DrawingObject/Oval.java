@@ -18,9 +18,13 @@ public class Oval implements DrawingShape {
 
     @Override
     public void execute(Graphics2D g2d) {
+        Color currentColor = g2d.getColor();
+        Stroke currentStroke = g2d.getStroke();
         g2d.setColor(color);
         g2d.setStroke(new BasicStroke(strokeWidth));
         g2d.drawOval(x, y, width, height);
+        g2d.setColor(currentColor);
+        g2d.setStroke(currentStroke);
     }
 
     public void update(int newX, int newY, int newWidth, int newHeight) {

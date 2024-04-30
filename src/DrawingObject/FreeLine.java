@@ -18,9 +18,13 @@ public class FreeLine implements DrawingShape{
 
     @Override
     public void execute(Graphics2D g) {
+        Color currentColor = g.getColor();
+        Stroke currentStroke = g.getStroke();
         g.setColor(color);
         g.setStroke(new BasicStroke(strokeWidth));
         g.drawLine(startX, startY, endX, endY);
+        g.setColor(currentColor);
+        g.setStroke(currentStroke);
     }
 
     @Override

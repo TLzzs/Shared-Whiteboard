@@ -3,7 +3,9 @@ package Server;
 import DrawingObject.DeleteAll;
 import DrawingObject.DrawingShape;
 import DrawingObject.TextOnBoard;
+import ShakeHands.CloseMessage;
 import ShakeHands.InitialCommunication;
+import ShakeHands.Notice;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -22,6 +24,7 @@ public class RequestHandler implements Runnable {
     private final WhiteBoardServer whiteBoardServer;
     private ObjectInputStream input;
     private ObjectOutputStream output;
+    private Notice notice;
 
     public boolean isAdmin() {
         return isAdmin;
@@ -33,6 +36,14 @@ public class RequestHandler implements Runnable {
 
     public String getUserName() {
         return userName;
+    }
+
+    public Notice getNotice() {
+        return notice;
+    }
+
+    public void setNotice(Notice notice) {
+        this.notice = notice;
     }
 
     public void setUserName(String userName) {
@@ -73,26 +84,30 @@ public class RequestHandler implements Runnable {
                     broadcastUpdate(clientInput);
                 } else if (clientInput instanceof InitialCommunication) {
                     sendStatusCode(whiteBoardServer.checkInitCommand((InitialCommunication) clientInput, this));
-//                    if (!isAdmin) {
+                    if (!isAdmin) {
                         sendInitialState(whiteBoardServer.getCurrentState(), whiteBoardServer.getTextOnBoardList());
-//                    }
+                    }
 
                 }
             }
         } catch (EOFException e) {
             logger.info("Connection closed by client");
+            whiteBoardServer.removeRequestHandler(this);
+            if (isAdmin) {
+                broadcastUpdate(new CloseMessage());
+                whiteBoardServer.cleanAllCache();
+            } else {
+                notice.setLeaving(true);
+                System.out.println("set :" +notice.isLeaving());
+                broadcastUpdate(notice);
+            }
+
         }
         catch (Exception e) {
             logger.severe("Error handling client: " + e.getMessage());
         } finally {
             try {
                 clientSocket.close();
-                whiteBoardServer.removeRequestHandler(this);
-//                if (isAdmin) {
-//                    logger.info("notifying and cleaning");
-////                    whiteBoardServer.cleanAll();
-//                }
-
             } catch (IOException e) {
                 logger.severe("Error closing client socket: " + e.getMessage());
             }
@@ -126,6 +141,7 @@ public class RequestHandler implements Runnable {
 
     public void sendUpdate(Object update) {
         try {
+            output.reset();
             output.writeObject(update);
             output.flush();
         } catch (IOException e) {
@@ -152,5 +168,7 @@ public class RequestHandler implements Runnable {
                 logger.severe("Failed to send update to client: " + e.getMessage());
             }
         });
+
+        broadcastUpdate(notice);
     }
 }

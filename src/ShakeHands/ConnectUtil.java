@@ -3,6 +3,7 @@ package ShakeHands;
 import java.util.logging.Logger;
 
 public class ConnectUtil {
+    public static String message;
     public static final String CREATE_COMMAND = "CreateWhiteBoard";
     public static final String JOIN_COMMAND = "JoinWhiteBoard";
     public static final int Accept = 200;
@@ -16,11 +17,14 @@ public class ConnectUtil {
 
     public static void printErrorStatusInfo (int statusCode, Logger logger) {
         if (statusCode == CreateFailed) {
-            logger.severe("Can not create white board, board already existed");
+            message = "Can not create white board, board already existed";
+            logger.severe(message);
         } else if (statusCode == JoinFailed) {
-            logger.severe("Can not join the white board , whiteboard has not yet been created");
+            message = "Can not join, whiteboard has not yet been created";
+            logger.severe(message);
         } else if (statusCode == UserNameDuplicate) {
-            logger.severe("UserName Duplicate , please choose another name");
+            message=" UserName Duplicate , please choose another name";
+            logger.severe(message);
 
         }
     }

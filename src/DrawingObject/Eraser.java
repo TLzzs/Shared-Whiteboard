@@ -18,9 +18,13 @@ public class Eraser implements DrawingShape {
 
     @Override
     public void execute(Graphics2D g2d) {
+        Color currentColor = g2d.getColor();
+        Stroke currentStroke = g2d.getStroke();
         g2d.setStroke(new BasicStroke(thickness, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         g2d.setColor(color);
         g2d.drawLine(x1, y1, x2, y2);
+        g2d.setColor(currentColor);
+        g2d.setStroke(currentStroke);
     }
 
     @Override
