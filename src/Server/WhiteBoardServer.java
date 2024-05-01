@@ -1,6 +1,7 @@
 package Server;
 
 import DrawingObject.Shape.DrawingShape;
+import DrawingObject.drawingPanelElements.SavedCanvas;
 import DrawingObject.drawingPanelElements.TextOnBoard;
 import ShakeHands.InitialCommunication;
 import ShakeHands.Notice;
@@ -10,6 +11,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
@@ -22,6 +24,7 @@ public class WhiteBoardServer {
     private final ExecutorService threadPool;
     private WhiteBoardState sharedWhiteBoard;
     private List<Socket> socketList;
+    private List<SavedCanvas> savedCanvasList;
 
     public WhiteBoardServer(int port, Logger logger) {
         this.port = port;
@@ -29,7 +32,7 @@ public class WhiteBoardServer {
         this.sharedWhiteBoard = new WhiteBoardState();
         this.socketList = new ArrayList<>();
         threadPool = Executors.newFixedThreadPool(10);
-
+        this.savedCanvasList = new CopyOnWriteArrayList<>();
         startServer();
     }
 
@@ -140,4 +143,11 @@ public class WhiteBoardServer {
         this.sharedWhiteBoard = new WhiteBoardState();
     }
 
+    public void saveCanvas(SavedCanvas savedCanvas) {
+        savedCanvasList.add(savedCanvas);
+    }
+
+    public List<SavedCanvas> getSavedCanvasList() {
+        return savedCanvasList;
+    }
 }

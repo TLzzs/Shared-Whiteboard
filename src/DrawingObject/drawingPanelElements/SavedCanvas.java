@@ -7,6 +7,7 @@ import javax.imageio.ImageIO;
 public class SavedCanvas implements Serializable {
     private String name;
     private byte[] imageData;
+    private boolean isSaving;
 
     public String getName() {
         return name;
@@ -19,6 +20,7 @@ public class SavedCanvas implements Serializable {
     public SavedCanvas(String name, BufferedImage canvas) {
         this.name = name;
         this.imageData = convertToByteArray(canvas);
+        this.isSaving = true;
     }
 
     public byte[] getImageData() {
@@ -27,6 +29,14 @@ public class SavedCanvas implements Serializable {
 
     public void setImageData(byte[] imageData) {
         this.imageData = imageData;
+    }
+
+    public boolean isSaving() {
+        return isSaving;
+    }
+
+    public void setSaving(boolean saving) {
+        isSaving = saving;
     }
 
     private byte[] convertToByteArray(BufferedImage image) {

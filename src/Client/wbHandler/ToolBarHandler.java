@@ -2,6 +2,7 @@ package Client.wbHandler;
 
 import Client.WhiteBoardGUI;
 import DrawingObject.drawingPanelElements.DeleteAll;
+import DrawingObject.drawingPanelElements.ExistingCanvas;
 import DrawingObject.drawingPanelElements.SavedCanvas;
 
 import javax.imageio.ImageIO;
@@ -11,10 +12,9 @@ import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
+import java.util.List;
 
 
 public class ToolBarHandler {
@@ -164,7 +164,7 @@ public class ToolBarHandler {
         fileMenu.add(newItem);
 
         JMenuItem openItem = new JMenuItem("Open");
-        openItem.addActionListener(e -> newAction());
+        openItem.addActionListener(e -> openAction());
         fileMenu.add(openItem);
 
         fileButton.addActionListener(e -> fileMenu.show(fileButton, 0, fileButton.getHeight()));
@@ -238,6 +238,10 @@ public class ToolBarHandler {
         }
     }
 
+    private void openAction() {
+        whiteBoardGUI.sendUpdateToServer(new ExistingCanvas());
+    }
+
 
 
     public void setCanvas(BufferedImage canvas) {
@@ -302,10 +306,36 @@ public class ToolBarHandler {
 
     private void clearEverything() {
         whiteBoardGUI.deleteAll();
+        whiteBoardGUI.sendUpdateToServer(new DeleteAll());
     }
     public void toggleFileButtonVisibility(boolean visible) {
         buttonShape.setVisible(visible);
         buttonText.setVisible(visible);
+    }
+
+    public void chooseCanvasForEditing(List<SavedCanvas> savedCanvases) {
+        if (savedCanvases != null && !savedCanvases.isEmpty()) {
+            String[] options = new String[savedCanvases.size()];
+            for (int i = 0; i < savedCanvases.size(); i++) {
+                options[i] = savedCanvases.get(i).getName();
+            }
+
+            String chosenCanvasName = (String) JOptionPane.showInputDialog(null, "Choose a canvas to edit:",
+                    "Edit Canvas", JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+
+            if (chosenCanvasName != null) {
+                // Retrieve the chosen SavedCanvas object and return it
+                for (SavedCanvas canvas : savedCanvases) {
+                    if (canvas.getName().equals(chosenCanvasName)) {
+                        canvas.setSaving(false);
+                        whiteBoardGUI.sendUpdateToServer(canvas);
+                    }
+                }
+            }
+        } else {
+            JOptionPane.showMessageDialog(null, "No saved canvases available.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+
     }
 
 }

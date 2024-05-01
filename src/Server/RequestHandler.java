@@ -2,6 +2,8 @@ package Server;
 
 import DrawingObject.drawingPanelElements.DeleteAll;
 import DrawingObject.Shape.DrawingShape;
+import DrawingObject.drawingPanelElements.ExistingCanvas;
+import DrawingObject.drawingPanelElements.SavedCanvas;
 import DrawingObject.drawingPanelElements.TextOnBoard;
 import ShakeHands.ChatWindow.Message;
 import ShakeHands.CloseMessage;
@@ -91,6 +93,18 @@ public class RequestHandler implements Runnable {
                 } else if (clientInput instanceof Message) {
                     System.out.println("received Message"+ ((Message) clientInput).getSender() + ((Message) clientInput).getContent());
                     broadcastUpdate(clientInput);
+                } else if (clientInput instanceof SavedCanvas) {
+                    if (((SavedCanvas) clientInput).isSaving()) {
+                        whiteBoardServer.saveCanvas((SavedCanvas) clientInput);
+                    } else {
+                        ((SavedCanvas) clientInput).setSaving(true);
+                        broadcastUpdate(clientInput);
+                        sendUpdate(clientInput);
+                    }
+
+                } else if (clientInput instanceof ExistingCanvas) {
+                    ((ExistingCanvas) clientInput).setSavedCanvasList(whiteBoardServer.getSavedCanvasList());
+                    sendUpdate(clientInput);
                 }
             }
         } catch (EOFException e) {

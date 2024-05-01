@@ -3,6 +3,8 @@ package Client;
 import DrawingObject.drawingPanelElements.DeleteAll;
 import DrawingObject.Shape.DrawingShape;
 import DrawingObject.InitWindow.PopupWindow;
+import DrawingObject.drawingPanelElements.ExistingCanvas;
+import DrawingObject.drawingPanelElements.SavedCanvas;
 import DrawingObject.drawingPanelElements.TextOnBoard;
 import ShakeHands.ChatWindow.Message;
 import ShakeHands.CloseMessage;
@@ -126,6 +128,11 @@ public class ClientSideHandler {
         } else if (update instanceof Message) {
             Message msg = (Message) update;
             wb.updateChatWindow(msg);
+        } else if (update instanceof ExistingCanvas) {
+            wb.showChoice((ExistingCanvas)update);
+        } else if (update instanceof SavedCanvas) {
+            System.out.println("received");
+            wb.syncBufferedImage((SavedCanvas)update);
         }
     }
 
@@ -137,7 +144,6 @@ public class ClientSideHandler {
                 output.flush();
             }
         } catch (IOException e) {
-            logger.severe("Error sending update to server: " + e.getMessage());
             closeConnection();
         }
     }

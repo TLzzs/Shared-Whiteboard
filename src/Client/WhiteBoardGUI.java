@@ -6,16 +6,21 @@ import Client.wbHandler.ToolBarHandler;
 import DrawingObject.InitWindow.NoticeMessage;
 import DrawingObject.Shape.DrawingShape;
 import DrawingObject.Shape.Eraser;
+import DrawingObject.drawingPanelElements.ExistingCanvas;
 import DrawingObject.drawingPanelElements.JTextCompositeKey;
+import DrawingObject.drawingPanelElements.SavedCanvas;
 import DrawingObject.drawingPanelElements.TextOnBoard;
 import ShakeHands.ChatWindow.Message;
 import ShakeHands.Notice;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Map;
@@ -318,5 +323,24 @@ public class WhiteBoardGUI extends JFrame {
 
     public void toggleFileButtonVisibility() {
         toolBarHandler.toggleFileButtonVisibility(true);
+    }
+
+    public void showChoice(ExistingCanvas existingCanvas) {
+        toolBarHandler.chooseCanvasForEditing(existingCanvas.getSavedCanvasList());
+    }
+
+    public void syncBufferedImage(SavedCanvas savedCanvas) {
+        byte[] imageData = savedCanvas.getImageData();
+        if (imageData != null && imageData.length > 0) {
+            try {
+                ByteArrayInputStream bis = new ByteArrayInputStream(imageData);
+                canvas = ImageIO.read(bis);
+                this.g2d = this.canvas.createGraphics();
+                repaint();
+            } catch (IOException e) {
+                e.printStackTrace();
+                // Handle the exception as needed
+            }
+        }
     }
 }
