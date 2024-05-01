@@ -2,11 +2,20 @@ package Client.wbHandler;
 
 import Client.WhiteBoardGUI;
 import DrawingObject.drawingPanelElements.DeleteAll;
+import DrawingObject.drawingPanelElements.SavedCanvas;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.NumberFormatter;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+
 
 public class ToolBarHandler {
     private String currentTool = "FreeLine"; // Default tool
@@ -15,9 +24,13 @@ public class ToolBarHandler {
     private Graphics2D g2d;
     private WhiteBoardGUI whiteBoardGUI;
 
-    public ToolBarHandler(Graphics2D g2d, WhiteBoardGUI whiteBoardGUI) {
+    private JToggleButton buttonShape, buttonText;
+    private BufferedImage canvas;
+
+    public ToolBarHandler(Graphics2D g2d, WhiteBoardGUI whiteBoardGUI, BufferedImage canvas) {
         this.g2d = g2d;
         this.whiteBoardGUI = whiteBoardGUI;
+        this.canvas = canvas;
     }
 
     public JPanel setupToolBar() {
@@ -79,7 +92,9 @@ public class ToolBarHandler {
 
     public JPanel setupsubToolBarShape() {
         subToolBarShape = new JPanel();
-        subToolBarShape.setLayout(new FlowLayout(FlowLayout.CENTER));
+        subToolBarShape.setLayout(new FlowLayout(FlowLayout.LEFT));
+
+        buttonShape = setUpFileButton(subToolBarShape);
 
         // Stroke size selection with icon
         Icon strokeIcon = new ImageIcon("src/icons/stroke.png");
@@ -113,7 +128,7 @@ public class ToolBarHandler {
                 g2d.setPaint(newColor);
             }
         });
-
+        subToolBarShape.add(Box.createHorizontalStrut(270));
         subToolBarShape.add(strokeLabel);
         subToolBarShape.add(strokeSizeSpinner);
         subToolBarShape.add(Box.createHorizontalStrut(20)); // Adds spacing
@@ -131,10 +146,38 @@ public class ToolBarHandler {
         return subToolBarShape;
     }
 
+    private JToggleButton setUpFileButton(JPanel subToolBar) {
+        JToggleButton fileButton = new JToggleButton("File");
+        JPopupMenu fileMenu = new JPopupMenu();
+
+        // Add menu items to the popup menu
+        JMenuItem saveItem = new JMenuItem("Save");
+        saveItem.addActionListener(e -> saveAction());
+        fileMenu.add(saveItem);
+
+        JMenuItem saveAsItem = new JMenuItem("Save As");
+        saveAsItem.addActionListener(e -> saveAsAction());
+        fileMenu.add(saveAsItem);
+
+        JMenuItem newItem = new JMenuItem("New");
+        newItem.addActionListener(e -> newAction());
+        fileMenu.add(newItem);
+
+        JMenuItem openItem = new JMenuItem("Open");
+        openItem.addActionListener(e -> newAction());
+        fileMenu.add(openItem);
+
+        fileButton.addActionListener(e -> fileMenu.show(fileButton, 0, fileButton.getHeight()));
+        subToolBar.add(fileButton);
+        fileButton.setVisible(false);
+        return fileButton;
+    }
+
     public JPanel setupSubToolBarText() {
         subToolBarText = new JPanel();
-        subToolBarText.setLayout(new FlowLayout(FlowLayout.CENTER));
+        subToolBarText.setLayout(new FlowLayout(FlowLayout.LEFT));
 
+        buttonText = setUpFileButton(subToolBarText);
         // Font size selection
         JLabel fontSizeLabel = new JLabel(new ImageIcon("src/icons/fontSize.png"));  // Adjust icon path as needed
         SpinnerModel fontSizeModel = new SpinnerNumberModel(12, 8, 48, 1);  // Default 12, min 8, max 48, step 1
@@ -170,6 +213,7 @@ public class ToolBarHandler {
             }
         });
 
+        subToolBarText.add(Box.createHorizontalStrut(250));
         subToolBarText.add(fontSizeLabel);
         subToolBarText.add(fontSizeSpinner);
         subToolBarText.add(Box.createHorizontalStrut(20));
@@ -183,5 +227,85 @@ public class ToolBarHandler {
         return subToolBarText;
     }
 
+
+    private void saveAction() {
+        String canvasName = JOptionPane.showInputDialog("Enter a name for the canvas:");
+        if (canvasName != null && !canvasName.trim().isEmpty()) {
+            SavedCanvas savedCanvas = new SavedCanvas(canvasName, canvas);
+            whiteBoardGUI.sendUpdateToServer(savedCanvas);
+        } else {
+            JOptionPane.showMessageDialog(null, "Canvas name cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+
+
+    public void setCanvas(BufferedImage canvas) {
+        this.canvas = canvas;
+    }
+
+    private void saveAsAction() {
+        // Logic to save current work with a new filename
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Specify a file to save");
+
+        // Set the default directory to user's home or get from a saved setting
+        fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+
+        // Optional: Set a file filter to restrict file types
+        fileChooser.setFileFilter(new FileNameExtensionFilter("PNG Images", "png"));
+
+        int userSelection = fileChooser.showSaveDialog(null);
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
+            // Ensure the file has the correct extension
+            if (!fileToSave.getAbsolutePath().endsWith(".png")) {
+                fileToSave = new File(fileToSave.getAbsolutePath() + ".png");
+            }
+
+            try {
+                // Assuming `canvas` is a BufferedImage of your whiteboard area
+                ImageIO.write(canvas, "PNG", fileToSave);
+                JOptionPane.showMessageDialog(null, "Save successful!", "Save Image", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null, "Error saving image: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    private void newAction() {
+        // Options for the JOptionPane
+        String[] options = {"Save", "Save As", "No"};
+
+        int choice = JOptionPane.showOptionDialog(null,
+                "Do you want to save the current project before starting a new one?",
+                "Save Current Work?",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                null, options, options[0]);
+
+        switch (choice) {
+            case 0:
+                saveAction();
+                break;
+            case 1:
+                saveAsAction();
+                break;
+            case 2:
+                clearEverything();
+                break;
+            default:
+                return;
+        }
+    }
+
+    private void clearEverything() {
+        whiteBoardGUI.deleteAll();
+    }
+    public void toggleFileButtonVisibility(boolean visible) {
+        buttonShape.setVisible(visible);
+        buttonText.setVisible(visible);
+    }
 
 }

@@ -1,6 +1,7 @@
 package Client;
 
 import Client.wbHandler.ChatWindowHandler;
+import Client.wbHandler.FileMenuHandler;
 import Client.wbHandler.ToolBarHandler;
 import DrawingObject.InitWindow.NoticeMessage;
 import DrawingObject.Shape.DrawingShape;
@@ -60,7 +61,7 @@ public class WhiteBoardGUI extends JFrame {
 
     public WhiteBoardGUI(ClientSideHandler clientSideHandler) {
         this.clientSideHandler = clientSideHandler;
-        this.toolBarHandler = new ToolBarHandler(g2d, this);
+        this.toolBarHandler = new ToolBarHandler(g2d, this, canvas);
         this.chatWindowHandler= new ChatWindowHandler();
         initUI();
     }
@@ -94,6 +95,7 @@ public class WhiteBoardGUI extends JFrame {
                 if (canvas == null) {
                     initCanvas();
                     toolBarHandler.setG2d(g2d);
+                    toolBarHandler.setCanvas(canvas);
                 }
                 g.drawImage(canvas, 0, 0, null);
             }
@@ -311,5 +313,10 @@ public class WhiteBoardGUI extends JFrame {
 
     public void updateChatWindow(Message msg) {
         chatWindowHandler.updateChatWindow(msg);
+    }
+
+
+    public void toggleFileButtonVisibility() {
+        toolBarHandler.toggleFileButtonVisibility(true);
     }
 }

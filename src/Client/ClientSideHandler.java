@@ -53,6 +53,7 @@ public class ClientSideHandler {
         logger.info("received status code: "+ statusCode);
         if (statusCode == AcceptCreate) {
             wb.setAdmin(true);
+            wb.toggleFileButtonVisibility();
             wb.setUserName(initialCommunication.getUsername());
             return;
         }else if (statusCode == AcceptJoin) {
