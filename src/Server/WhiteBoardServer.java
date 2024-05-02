@@ -150,4 +150,12 @@ public class WhiteBoardServer {
     public List<SavedCanvas> getSavedCanvasList() {
         return savedCanvasList;
     }
+
+    public void setCurrentCanvas(SavedCanvas clientInput) {
+        sharedWhiteBoard.setSavedCanvas(clientInput);
+    }
+
+    public SavedCanvas getCurrentCanvas() {
+        return sharedWhiteBoard.getSavedCanvas();
+    }
 }

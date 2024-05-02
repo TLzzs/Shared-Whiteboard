@@ -334,8 +334,20 @@ public class WhiteBoardGUI extends JFrame {
         if (imageData != null && imageData.length > 0) {
             try {
                 ByteArrayInputStream bis = new ByteArrayInputStream(imageData);
+                Color color = g2d.getColor();
+                Stroke basicStroke = g2d.getStroke();
+                Font font = g2d.getFont();
                 canvas = ImageIO.read(bis);
                 this.g2d = this.canvas.createGraphics();
+                g2d.setColor(color);
+                g2d.setStroke(basicStroke);
+                g2d.setFont(font);
+
+                toolBarHandler.setG2d(g2d);
+
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+
                 repaint();
             } catch (IOException e) {
                 e.printStackTrace();

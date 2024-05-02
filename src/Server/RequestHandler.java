@@ -94,6 +94,7 @@ public class RequestHandler implements Runnable {
                         whiteBoardServer.saveCanvas((SavedCanvas) clientInput);
                     } else {
                         ((SavedCanvas) clientInput).setSaving(true);
+                        whiteBoardServer.setCurrentCanvas((SavedCanvas)clientInput);
                         broadcastUpdate(clientInput);
                         sendUpdate(clientInput);
                     }
@@ -108,7 +109,7 @@ public class RequestHandler implements Runnable {
                         sendToOneClient((ApproveRequest) clientInput);
                     }
                 } else if (clientInput instanceof SyncNotificatioon) {
-                    sendInitialState(whiteBoardServer.getCurrentState(), whiteBoardServer.getTextOnBoardList());
+                    sendInitialState(whiteBoardServer.getCurrentState(), whiteBoardServer.getTextOnBoardList(),whiteBoardServer.getCurrentCanvas());
                 }
             }
         } catch (EOFException e) {
@@ -187,7 +188,7 @@ public class RequestHandler implements Runnable {
         }
     }
 
-    public void sendInitialState(List<Object> currentState, List<TextOnBoard> textOnBoardList) {
+    public void sendInitialState(List<Object> currentState, List<TextOnBoard> textOnBoardList, SavedCanvas currentCanvas) {
         currentState.forEach(state -> {
             try {
                 output.writeObject(state);
@@ -207,6 +208,12 @@ public class RequestHandler implements Runnable {
             }
         });
 
+//        try {
+//            output.writeObject(currentCanvas);
+//            output.flush();
+//        } catch (IOException e) {
+//            logger.severe("Failed to send update to client: " + e.getMessage());
+//        }
         broadcastUpdate(notice);
     }
 }

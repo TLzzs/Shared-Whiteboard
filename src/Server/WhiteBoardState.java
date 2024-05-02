@@ -1,6 +1,7 @@
 package Server;
 
 import DrawingObject.Shape.DrawingShape;
+import DrawingObject.drawingPanelElements.SavedCanvas;
 import DrawingObject.drawingPanelElements.TextOnBoard;
 
 import java.util.Iterator;
@@ -11,6 +12,16 @@ public class WhiteBoardState {
     private List<Object> drawingOperations = new CopyOnWriteArrayList<>();
     private final List<RequestHandler> requestHandlers = new CopyOnWriteArrayList<>();
     private List<TextOnBoard> textOnBoardList = new CopyOnWriteArrayList<>();
+    private SavedCanvas savedCanvas;
+
+    public SavedCanvas getSavedCanvas() {
+        return savedCanvas;
+    }
+
+    public void setSavedCanvas(SavedCanvas savedCanvas) {
+        this.savedCanvas = savedCanvas;
+    }
+
     public synchronized void updateState(DrawingShape operation) {
         drawingOperations.add(operation);
     }
