@@ -1,6 +1,7 @@
 package Client.wbHandler;
 
 import Client.WhiteBoardGUI;
+import DrawingObject.UserList.UserListDialog;
 import DrawingObject.drawingPanelElements.DeleteAll;
 import DrawingObject.drawingPanelElements.ExistingCanvas;
 import DrawingObject.drawingPanelElements.SavedCanvas;
@@ -8,6 +9,8 @@ import DrawingObject.drawingPanelElements.SavedCanvas;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.NumberFormatter;
 import java.awt.*;
@@ -19,11 +22,11 @@ import java.util.List;
 
 public class ToolBarHandler {
     private String currentTool = "FreeLine"; // Default tool
-    private JToggleButton textButton;
+    private JToggleButton textButton, peopleButtonShape, peopleButtonText;
     private JPanel subToolBarShape, subToolBarText;
     private Graphics2D g2d;
     private WhiteBoardGUI whiteBoardGUI;
-
+    private UserListDialog userListDialog;
     private JToggleButton buttonShape, buttonText;
     private BufferedImage canvas;
 
@@ -31,6 +34,7 @@ public class ToolBarHandler {
         this.g2d = g2d;
         this.whiteBoardGUI = whiteBoardGUI;
         this.canvas = canvas;
+        this.userListDialog = new UserListDialog();
     }
 
     public JPanel setupToolBar() {
@@ -56,6 +60,7 @@ public class ToolBarHandler {
             toolsGroup.add(buttons[i]);
             toolBar.add(buttons[i]);
         }
+        
         return toolBar;
 
     }
@@ -128,13 +133,19 @@ public class ToolBarHandler {
                 g2d.setPaint(newColor);
             }
         });
-        subToolBarShape.add(Box.createHorizontalStrut(270));
+        peopleButtonShape = setUpPeopleButton(subToolBarShape);
+        subToolBarShape.add(Box.createHorizontalStrut(240));
+        subToolBarShape.add(Box.createHorizontalGlue());
         subToolBarShape.add(strokeLabel);
         subToolBarShape.add(strokeSizeSpinner);
-        subToolBarShape.add(Box.createHorizontalStrut(20)); // Adds spacing
+        subToolBarShape.add(Box.createHorizontalStrut(100)); // Adds spacing
         subToolBarShape.add(colorLabel);
         subToolBarShape.add(colorButton);
-
+        subToolBarShape.add(Box.createHorizontalStrut(120));
+        subToolBarShape.add(peopleButtonShape);
+        subToolBarShape.add(buttonShape);
+        buttonShape.setVisible(false);
+        peopleButtonShape.setVisible(false);
         subToolBarShape.setVisible(false);  // Initially visible
 
 
@@ -144,6 +155,18 @@ public class ToolBarHandler {
             g2d.setStroke(new BasicStroke(strokeSize));
         });
         return subToolBarShape;
+    }
+
+    private JToggleButton setUpPeopleButton(JPanel subToolBarShape) {
+        Icon peopleIcon = new ImageIcon("src/icons/people.png"); // Provide the path to the people icon
+        JToggleButton peopleButton = new JToggleButton(peopleIcon); // Create the JToggleButton with the icon
+        peopleButton.setToolTipText("People"); // Set tooltip text
+        peopleButton.addActionListener(e -> {
+
+        });
+        subToolBarShape.add(peopleButton);
+        subToolBarShape.add(peopleButton); // Add the PeopleButton to the subToolBarShape
+        return peopleButton;
     }
 
     private JToggleButton setUpFileButton(JPanel subToolBar) {
@@ -168,8 +191,6 @@ public class ToolBarHandler {
         fileMenu.add(openItem);
 
         fileButton.addActionListener(e -> fileMenu.show(fileButton, 0, fileButton.getHeight()));
-        subToolBar.add(fileButton);
-        fileButton.setVisible(false);
         return fileButton;
     }
 
@@ -213,7 +234,8 @@ public class ToolBarHandler {
             }
         });
 
-        subToolBarText.add(Box.createHorizontalStrut(250));
+        peopleButtonText = setUpPeopleButton(subToolBarText);
+        subToolBarText.add(Box.createHorizontalStrut(150));
         subToolBarText.add(fontSizeLabel);
         subToolBarText.add(fontSizeSpinner);
         subToolBarText.add(Box.createHorizontalStrut(20));
@@ -222,6 +244,11 @@ public class ToolBarHandler {
         subToolBarText.add(Box.createHorizontalStrut(20));  // Adds spacing
         subToolBarText.add(fontColorLabel);
         subToolBarText.add(fontColorButton);
+        subToolBarText.add(Box.createHorizontalStrut(50));
+        subToolBarText.add(peopleButtonText);
+        subToolBarText.add(buttonText);
+        buttonText.setVisible(false);
+        peopleButtonText.setVisible(false);
 
         subToolBarText.setVisible(false);  // Initially hidden until the Text tool is selected
         return subToolBarText;
@@ -311,6 +338,8 @@ public class ToolBarHandler {
     public void toggleFileButtonVisibility(boolean visible) {
         buttonShape.setVisible(visible);
         buttonText.setVisible(visible);
+        peopleButtonText.setVisible(visible);
+        peopleButtonShape.setVisible(visible);
     }
 
     public void chooseCanvasForEditing(List<SavedCanvas> savedCanvases) {
