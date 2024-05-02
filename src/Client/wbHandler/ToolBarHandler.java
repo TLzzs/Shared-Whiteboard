@@ -1,7 +1,6 @@
 package Client.wbHandler;
 
 import Client.WhiteBoardGUI;
-import DrawingObject.UserList.UserListDialog;
 import DrawingObject.drawingPanelElements.DeleteAll;
 import DrawingObject.drawingPanelElements.ExistingCanvas;
 import DrawingObject.drawingPanelElements.SavedCanvas;
@@ -26,7 +25,6 @@ public class ToolBarHandler {
     private JPanel subToolBarShape, subToolBarText;
     private Graphics2D g2d;
     private WhiteBoardGUI whiteBoardGUI;
-    private UserListDialog userListDialog;
     private JToggleButton buttonShape, buttonText;
     private BufferedImage canvas;
 
@@ -34,7 +32,6 @@ public class ToolBarHandler {
         this.g2d = g2d;
         this.whiteBoardGUI = whiteBoardGUI;
         this.canvas = canvas;
-        this.userListDialog = new UserListDialog();
     }
 
     public JPanel setupToolBar() {
