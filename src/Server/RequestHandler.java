@@ -5,10 +5,8 @@ import DrawingObject.Shape.DrawingShape;
 import DrawingObject.drawingPanelElements.ExistingCanvas;
 import DrawingObject.drawingPanelElements.SavedCanvas;
 import DrawingObject.drawingPanelElements.TextOnBoard;
+import ShakeHands.*;
 import ShakeHands.ChatWindow.Message;
-import ShakeHands.CloseMessage;
-import ShakeHands.InitialCommunication;
-import ShakeHands.Notice;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -87,9 +85,7 @@ public class RequestHandler implements Runnable {
                     broadcastUpdate(clientInput);
                 } else if (clientInput instanceof InitialCommunication) {
                     sendStatusCode(whiteBoardServer.checkInitCommand((InitialCommunication) clientInput, this));
-                    if (!isAdmin) {
-                        sendInitialState(whiteBoardServer.getCurrentState(), whiteBoardServer.getTextOnBoardList());
-                    }
+
                 } else if (clientInput instanceof Message) {
                     System.out.println("received Message"+ ((Message) clientInput).getSender() + ((Message) clientInput).getContent());
                     broadcastUpdate(clientInput);
@@ -105,6 +101,14 @@ public class RequestHandler implements Runnable {
                 } else if (clientInput instanceof ExistingCanvas) {
                     ((ExistingCanvas) clientInput).setSavedCanvasList(whiteBoardServer.getSavedCanvasList());
                     sendUpdate(clientInput);
+                } else if (clientInput instanceof ApproveRequest) {
+                    if (((ApproveRequest) clientInput).isApprove() == null) {
+                        sendUpdateToAdmin(clientInput);
+                    } else {
+                        sendToOneClient((ApproveRequest) clientInput);
+                    }
+                } else if (clientInput instanceof SyncNotificatioon) {
+                    sendInitialState(whiteBoardServer.getCurrentState(), whiteBoardServer.getTextOnBoardList());
                 }
             }
         } catch (EOFException e) {
@@ -129,6 +133,23 @@ public class RequestHandler implements Runnable {
                 logger.severe("Error closing client socket: " + e.getMessage());
             }
         }
+    }
+
+    private void sendToOneClient(ApproveRequest clientInput) {
+        whiteBoardServer.getRequestHandler().forEach(requestHandler -> {
+            if (requestHandler.getUserName().equals(clientInput.getUserName())) {
+                requestHandler.sendUpdate(clientInput);
+            }
+        });
+    }
+
+    private void sendUpdateToAdmin(Object clientInput) {
+        whiteBoardServer.getRequestHandler().forEach(requestHandler -> {
+            if (requestHandler.isAdmin()) {
+                System.out.println("sending request to Admin");
+                requestHandler.sendUpdate(clientInput);
+            }
+        });
     }
 
 

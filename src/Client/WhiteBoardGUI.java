@@ -1,7 +1,6 @@
 package Client;
 
 import Client.wbHandler.ChatWindowHandler;
-import Client.wbHandler.FileMenuHandler;
 import Client.wbHandler.ToolBarHandler;
 import DrawingObject.InitWindow.NoticeMessage;
 import DrawingObject.Shape.DrawingShape;
@@ -10,6 +9,7 @@ import DrawingObject.drawingPanelElements.ExistingCanvas;
 import DrawingObject.drawingPanelElements.JTextCompositeKey;
 import DrawingObject.drawingPanelElements.SavedCanvas;
 import DrawingObject.drawingPanelElements.TextOnBoard;
+import ShakeHands.ApproveRequest;
 import ShakeHands.ChatWindow.Message;
 import ShakeHands.Notice;
 
@@ -344,5 +344,59 @@ public class WhiteBoardGUI extends JFrame {
         }
     }
 
+    private JFrame waitingFrame;
 
+    public JFrame drawWaitingWindow() {
+        waitingFrame = new JFrame("Waiting for Approval");
+        waitingFrame.setLayout(new BorderLayout());
+        waitingFrame.add(new JLabel("Please wait until an admin approves your join request.", SwingConstants.CENTER), BorderLayout.CENTER);
+        waitingFrame.setSize(300, 200);
+        waitingFrame.setLocationRelativeTo(null); // Center on screen
+        waitingFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); // Prevent closing
+        waitingFrame.setResizable(false); // Prevent resizing
+        waitingFrame.setVisible(true);
+
+        return waitingFrame; // Return the frame for further use
+    }
+
+    public void drawRequestWindow(ApproveRequest request) {
+        // Create the dialog and set its properties
+        JDialog requestDialog = new JDialog(this, "Approve Join Request", true);
+        requestDialog.setLayout(new BorderLayout());
+        requestDialog.setSize(300, 150);
+        requestDialog.setLocationRelativeTo(this);
+
+        // Add a message to the dialog
+        JLabel messageLabel = new JLabel("<html>User: <b>" + request.getUserName() + "</b> is requesting to join. Approve or Reject?</html>", SwingConstants.CENTER);
+        requestDialog.add(messageLabel, BorderLayout.CENTER);
+
+        // Create a panel for buttons
+        JPanel buttonPanel = new JPanel();
+        JButton approveButton = new JButton("Approve");
+        JButton rejectButton = new JButton("Reject");
+        buttonPanel.add(approveButton);
+        buttonPanel.add(rejectButton);
+        requestDialog.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Add action listeners to buttons
+        approveButton.addActionListener(e -> {
+            request.setApprove(true);
+            sendUpdateToServer(request);
+            requestDialog.dispose();
+        });
+
+        rejectButton.addActionListener(e -> {
+            request.setApprove(false);
+            sendUpdateToServer(request);
+            requestDialog.dispose();
+        });
+
+        // Show the dialog
+        requestDialog.setVisible(true);
+    }
+
+
+    public void closeWindow() {
+        waitingFrame.dispose();
+    }
 }

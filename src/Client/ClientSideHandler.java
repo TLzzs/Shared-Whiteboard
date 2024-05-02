@@ -6,10 +6,8 @@ import DrawingObject.InitWindow.PopupWindow;
 import DrawingObject.drawingPanelElements.ExistingCanvas;
 import DrawingObject.drawingPanelElements.SavedCanvas;
 import DrawingObject.drawingPanelElements.TextOnBoard;
+import ShakeHands.*;
 import ShakeHands.ChatWindow.Message;
-import ShakeHands.CloseMessage;
-import ShakeHands.InitialCommunication;
-import ShakeHands.Notice;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -44,10 +42,52 @@ public class ClientSideHandler {
             int statusCode =  waitTilServerReply();
 
             actionOnStatusCode(statusCode, initialCommunication);
+
+            if (!wb.isAdmin() && statusCode ==AcceptJoin) {
+                sendUpdateToServer(new ApproveRequest(wb.getUserName()));
+                wb.drawWaitingWindow();
+                waitTilAdminReply();
+                sendUpdateToServer(new SyncNotificatioon());
+            }
+
             // Start a thread to listen for server updates
             new Thread(this::listenForServerUpdates).start();
+//            sendUpdateToServer(new SyncNotificatioon());
         } catch (IOException e) {
             logger.severe("Error initializing communication streams: " + e.getMessage());
+        }
+    }
+
+    private void waitTilAdminReply() {
+        try {
+            while (true) {
+                Object serverMessage = input.readObject();
+                System.out.println("server message" + serverMessage.getClass());
+                if (serverMessage instanceof ApproveRequest) {
+                    SwingUtilities.invokeLater(() -> {
+                        closeWaitingWindow((ApproveRequest) serverMessage);
+                    });
+                    return;
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void closeWaitingWindow(ApproveRequest serverMessage) {
+        if (serverMessage.isApprove()) {
+            wb.closeWindow();
+        } else {
+            SwingUtilities.invokeLater(() -> {
+                PopupWindow popup = new PopupWindow("Admin reject your request , closing...", () -> {
+                    closeConnection();
+                    System.exit(1);
+                });
+                popup.adminClose();
+            });
         }
     }
 
@@ -88,6 +128,7 @@ public class ClientSideHandler {
         try {
             Object update;
             while ((update = input.readObject()) != null) {
+                System.out.println("receive: "+ update.getClass());
                 handleServerUpdate(update);
             }
         } catch (IOException | ClassNotFoundException e) {
@@ -133,6 +174,9 @@ public class ClientSideHandler {
         } else if (update instanceof SavedCanvas) {
             System.out.println("received");
             wb.syncBufferedImage((SavedCanvas)update);
+        } else if (update instanceof ApproveRequest) {
+            System.out.println("show window");
+            wb.drawRequestWindow((ApproveRequest) update);
         }
     }
 
