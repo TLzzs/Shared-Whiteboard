@@ -22,10 +22,13 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
 
 import static Client.Utility.TextFieldUtility.addTextFieldListener;
@@ -63,6 +66,15 @@ public class WhiteBoardGUI extends JFrame {
     private ChatWindowHandler chatWindowHandler;
     private JPanel dynamicToolBar, drawingPanel;
     private Map<UUID, JTextCompositeKey> textFieldMap = new ConcurrentHashMap<>();
+    private List<String> userList = new CopyOnWriteArrayList<>();
+
+    public List<String> getUserList() {
+        return userList;
+    }
+
+    public void setUserList(List<String> userList) {
+        this.userList = userList;
+    }
 
     public WhiteBoardGUI(ClientSideHandler clientSideHandler) {
         this.clientSideHandler = clientSideHandler;
@@ -395,6 +407,9 @@ public class WhiteBoardGUI extends JFrame {
             request.setApprove(true);
             sendUpdateToServer(request);
             requestDialog.dispose();
+            getUserList().add(request.getUserName());
+            System.out.println("should add " + request.getUserName());
+            toolBarHandler.repaintUserList();
         });
 
         rejectButton.addActionListener(e -> {
@@ -410,5 +425,10 @@ public class WhiteBoardGUI extends JFrame {
 
     public void closeWindow() {
         waitingFrame.dispose();
+    }
+
+    public void repaintUserList() {
+        System.out.println("should add ");
+        toolBarHandler.repaintUserList();
     }
 }

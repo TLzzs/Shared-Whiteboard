@@ -64,4 +64,9 @@ public class WhiteBoardState {
     public void deleteRequestHandler(RequestHandler requestHandler) {
         requestHandlers.remove(requestHandler);
     }
+
+//    public void deleteRequestHandler(String userName) {
+////        requestHandlers.
+//
+//    }
 }

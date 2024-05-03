@@ -4,19 +4,20 @@ import Client.WhiteBoardGUI;
 import DrawingObject.drawingPanelElements.DeleteAll;
 import DrawingObject.drawingPanelElements.ExistingCanvas;
 import DrawingObject.drawingPanelElements.SavedCanvas;
+import ShakeHands.DisconnectMessage;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
 import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 public class ToolBarHandler {
@@ -28,10 +29,15 @@ public class ToolBarHandler {
     private JToggleButton buttonShape, buttonText;
     private BufferedImage canvas;
 
+    DefaultListModel<String> listModel;
+    JList<String> list;
+
     public ToolBarHandler(Graphics2D g2d, WhiteBoardGUI whiteBoardGUI, BufferedImage canvas) {
         this.g2d = g2d;
         this.whiteBoardGUI = whiteBoardGUI;
         this.canvas = canvas;
+        this.listModel = new DefaultListModel<>();
+        this.list = new JList<>(listModel);
     }
 
     public JPanel setupToolBar() {
@@ -159,11 +165,75 @@ public class ToolBarHandler {
         JToggleButton peopleButton = new JToggleButton(peopleIcon); // Create the JToggleButton with the icon
         peopleButton.setToolTipText("People"); // Set tooltip text
         peopleButton.addActionListener(e -> {
-
+            displayPeopleList();
         });
         subToolBarShape.add(peopleButton);
         subToolBarShape.add(peopleButton); // Add the PeopleButton to the subToolBarShape
         return peopleButton;
+    }
+
+
+    private void displayPeopleList() {
+        listModel.clear();
+        // Debug print
+        JDialog participantsDialog = new JDialog(whiteBoardGUI, "Participants");
+        participantsDialog.setSize(300, 400);
+        participantsDialog.setLocationRelativeTo(whiteBoardGUI);
+        participantsDialog.setLayout(new BorderLayout());
+
+
+        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        List<String> people = whiteBoardGUI.getUserList(); // Ensure this method returns a valid list
+        if (people != null) {
+            people.forEach(listModel::addElement);
+        }
+
+        JScrollPane scrollPane = new JScrollPane(list);
+        participantsDialog.add(scrollPane, BorderLayout.CENTER);
+
+        if (whiteBoardGUI.isAdmin()) {
+            JPanel buttonPanel = new JPanel();
+            JButton kickButton = new JButton("Kick");
+            kickButton.addActionListener(e -> {
+                String selectedUser = list.getSelectedValue();
+                if (selectedUser != null) {
+                    kickPerson(selectedUser);
+                    whiteBoardGUI.getUserList().remove(selectedUser);
+                    listModel.removeElement(selectedUser);
+                }
+            });
+            buttonPanel.add(kickButton);
+            participantsDialog.add(buttonPanel, BorderLayout.SOUTH);
+        }
+
+        participantsDialog.setVisible(true);
+    }
+
+    public void repaintUserList() {
+        if (listModel == null) {
+            System.out.println("List model is not initialized.");
+            return;  // Guard against uninitialized listModel
+        }
+
+        listModel.clear();  // Clear the existing elements
+
+        List<String> names = whiteBoardGUI.getUserList();  // Fetch the latest list of users
+        if (names != null) {
+            Set<String> uniqueNames = new HashSet<>(names);  // Remove duplicates by adding to a Set
+            uniqueNames.forEach(listModel::addElement);  // Add each unique name to the list model
+        }
+
+        if (list != null) {
+            list.revalidate();  // Revalidate to refresh layout and contents
+            list.repaint();     // Repaint to update the display
+        } else {
+            System.out.println("List component is not initialized.");
+        }
+    }
+
+    private void kickPerson(String person) {
+        whiteBoardGUI.sendUpdateToServer(new DisconnectMessage(person));
     }
 
     private JToggleButton setUpFileButton(JPanel subToolBar) {
@@ -363,5 +433,6 @@ public class ToolBarHandler {
         }
 
     }
+
 
 }

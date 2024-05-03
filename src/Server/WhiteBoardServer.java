@@ -123,9 +123,6 @@ public class WhiteBoardServer {
         sharedWhiteBoard.deleteRequestHandler(requestHandler);
     }
 
-//    public void notifyAdminDisconnect() {
-//        sharedWhiteBoard.getRequestHandler().forEach(RequestHandler::raiseEOF);
-//    }
 
     public List<Object> getCurrentState() {
         return sharedWhiteBoard.getCurrentState();

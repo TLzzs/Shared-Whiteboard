@@ -106,10 +106,12 @@ public class RequestHandler implements Runnable {
                     if (((ApproveRequest) clientInput).isApprove() == null) {
                         sendUpdateToAdmin(clientInput);
                     } else {
-                        sendToOneClient((ApproveRequest) clientInput);
+                        sendToOneClient(clientInput, ((ApproveRequest) clientInput).getUserName());
                     }
                 } else if (clientInput instanceof SyncNotificatioon) {
                     sendInitialState(whiteBoardServer.getCurrentState(), whiteBoardServer.getTextOnBoardList(),whiteBoardServer.getCurrentCanvas());
+                } else if (clientInput instanceof DisconnectMessage) {
+                    sendToOneClient(clientInput, ((DisconnectMessage) clientInput).getUserName());
                 }
             }
         } catch (EOFException e) {
@@ -120,7 +122,6 @@ public class RequestHandler implements Runnable {
                 whiteBoardServer.cleanAllCache();
             } else {
                 notice.setLeaving(true);
-                System.out.println("set :" +notice.isLeaving());
                 broadcastUpdate(notice);
             }
 
@@ -136,9 +137,9 @@ public class RequestHandler implements Runnable {
         }
     }
 
-    private void sendToOneClient(ApproveRequest clientInput) {
+    private void sendToOneClient(Object clientInput, String userName) {
         whiteBoardServer.getRequestHandler().forEach(requestHandler -> {
-            if (requestHandler.getUserName().equals(clientInput.getUserName())) {
+            if (requestHandler.getUserName().equals(userName)) {
                 requestHandler.sendUpdate(clientInput);
             }
         });
@@ -207,13 +208,6 @@ public class RequestHandler implements Runnable {
                 logger.severe("Failed to send update to client: " + e.getMessage());
             }
         });
-
-//        try {
-//            output.writeObject(currentCanvas);
-//            output.flush();
-//        } catch (IOException e) {
-//            logger.severe("Failed to send update to client: " + e.getMessage());
-//        }
         broadcastUpdate(notice);
     }
 }

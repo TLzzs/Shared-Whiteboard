@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static ShakeHands.Util.ConnectUtil.*;
@@ -44,6 +45,7 @@ public class ClientSideHandler {
             actionOnStatusCode(statusCode, initialCommunication);
 
             if (!wb.isAdmin() && statusCode ==AcceptJoin) {
+                System.out.println("reach here ");
                 sendUpdateToServer(new ApproveRequest(wb.getUserName()));
                 wb.drawWaitingWindow();
                 waitTilAdminReply();
@@ -166,6 +168,11 @@ public class ClientSideHandler {
             SwingUtilities.invokeLater(() -> {
                 wb.showNotice(notice);
             });
+
+            if (wb.isAdmin() && notice.isLeaving()) {
+                wb.getUserList().remove(notice.getUsername());
+                wb.repaintUserList();
+            }
         } else if (update instanceof Message) {
             Message msg = (Message) update;
             wb.updateChatWindow(msg);
@@ -177,6 +184,14 @@ public class ClientSideHandler {
         } else if (update instanceof ApproveRequest) {
             System.out.println("show window");
             wb.drawRequestWindow((ApproveRequest) update);
+        } else if (update instanceof DisconnectMessage) {
+            SwingUtilities.invokeLater(() -> {
+                PopupWindow popup = new PopupWindow("You have been kicked out", () -> {
+                    closeConnection();
+                    System.exit(1);
+                });
+                popup.adminClose();
+            });
         }
     }
 
@@ -199,6 +214,7 @@ public class ClientSideHandler {
 
     private void closeConnection() {
         try {
+//            sendUpdateToServer();
             if (input != null) input.close();
             if (output != null) output.close();
             if (socket != null) socket.close();
